@@ -1,0 +1,77 @@
+<section class="app-view" id="view-pipeline">
+  <header class="compare-page-header">
+    <div>
+      <p class="eyebrow">Report</p>
+      <h1>Pipeline report</h1>
+      <p>Genera un dossier di lavoro: dati misurabili, evidenze nel testo e punti da validare filologicamente.</p>
+    </div>
+  </header>
+  <div class="compare-layout">
+    <aside class="panel compare-controls">
+      <h2>1. Testi nel report</h2>
+      <p class="field-help">Seleziona i documenti da includere. Alcune sezioni richiedono almeno due testi.</p>
+      <div id="compare-document-list" class="check-list"></div>
+
+      <h2>2. Impostazioni</h2>
+      <label class="field">
+        <span>Parser / lemmatizzatore</span>
+        <select id="parser-select"></select>
+        <small class="field-help">Forme normalizzate = baseline controllabile. LatinCy = lemmi e grammatica, se installato.</small>
+      </label>
+      <label class="field">
+        <span>Stile report</span>
+        <select id="report-style"></select>
+      </label>
+      <fieldset class="normalization-box">
+        <legend>Pulizia del calcolo</legend>
+        <label><input id="profile-lower" type="checkbox" checked> Minuscole</label>
+        <label><input id="profile-ji" type="checkbox"> j -> i</label>
+        <label><input id="profile-vu" type="checkbox"> v -> u</label>
+        <small>Si applica alle analisi, non modifica la trascrizione salvata.</small>
+      </fieldset>
+      <label class="field">
+        <span>Termini giuridici</span>
+        <textarea id="legal-terms" rows="4" placeholder="Vuoto = famiglie base. Oppure termini separati da virgola o a capo."></textarea>
+      </label>
+      <details class="pipeline-advanced">
+        <summary>Profilo stilometrico opzionale</summary>
+        <label class="field">
+          <span>Tipo di confronto</span>
+          <select id="stylometry-profile">
+            <option value="standard" selected>Standard: parole frequenti</option>
+            <option value="function">Più prudente: parole grammaticali</option>
+            <option value="char3">Grafico/formulare: sequenze di 3 caratteri</option>
+          </select>
+          <small class="field-help">Serve solo se includi la sezione stilometria. Lascia standard se non devi fare prove tecniche.</small>
+        </label>
+        <input id="feature-type" type="hidden" value="words">
+        <input id="feature-count" type="hidden" value="100">
+      </details>
+
+      <div class="module-console" aria-label="Sezioni report">
+        <h2>3. Sezioni del report</h2>
+        <div class="pipeline-module-picker">
+          <span>Analisi da includere</span>
+          <small class="field-help">Ogni sezione deve produrre dati leggibili e rimando al testo, non una conclusione automatica.</small>
+          <div id="analysis-module-list" class="module-choice-list"></div>
+        </div>
+        <button class="primary-button full-width" id="run-pipeline">Genera report</button>
+        <div id="module-summary" class="module-summary"></div>
+      </div>
+    </aside>
+
+    <div class="compare-results" id="compare-results">
+      <div class="empty-state panel pipeline-empty-state">
+        <span class="empty-glyph">Aa</span>
+        <h2>Report di lavoro</h2>
+        <p>Il report aiuta se resta verificabile: mostra termini evidenziati, profili lessicali, affinità e passi simili come indizi da controllare, non come verdetti automatici.</p>
+        <div class="empty-flow" aria-label="Passaggi della pipeline">
+          <span>Testi</span>
+          <span>Sezioni</span>
+          <span>Evidenze</span>
+          <span>Report</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

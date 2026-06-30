@@ -1,0 +1,60 @@
+<section class="app-view" id="view-editor">
+  <section class="editor-ribbon">
+    <button class="secondary-button" data-view="home">Torna alla home</button>
+    <span class="editor-separator"></span>
+    <label class="field editor-document-field">
+      <span>Documento</span>
+      <select id="editor-document-select"></select>
+    </label>
+    <button class="secondary-button" id="editor-load-document">Carica</button>
+    <span class="editor-separator"></span>
+    <button class="primary-button" id="editor-save">Salva</button>
+    <button class="secondary-button" id="editor-reset">Ripristina</button>
+    <button class="secondary-button" id="editor-annotate-selection">Annota</button>
+    <button class="secondary-button" id="editor-toggle-annotations">Annotazioni</button>
+    <span class="editor-status-line" id="editor-status">Scegli un testo.</span>
+  </section>
+  <div class="editor-workspace">
+    <section class="editor-document-stage">
+      <div class="editor-start" id="editor-start">
+        <h2>Seleziona un documento</h2>
+        <p>Scegli un testo dalla barra superiore e premi Carica.</p>
+      </div>
+      <div class="editor-page-toolbar">
+        <strong id="editor-current-title">Nessun documento caricato</strong>
+        <span>Seleziona testo e usa il tasto destro.</span>
+      </div>
+      <div id="editor-text" class="editor-document-page" contenteditable="true" spellcheck="false" aria-label="Editor del testo"></div>
+      <div class="editor-context-menu" id="editor-context-menu">
+        <button type="button" id="editor-menu-annotate">Annota selezione</button>
+        <button type="button" id="editor-menu-delete">Cancella annotazione</button>
+      </div>
+      <form class="editor-annotation-popover" id="editor-annotation-form">
+        <div class="popover-heading">
+          <strong>Nuova annotazione</strong>
+          <button class="icon-button" type="button" id="editor-close-annotation">x</button>
+        </div>
+        <div class="selection-preview" id="editor-selection-preview">Seleziona un passo nel testo.</div>
+        <label class="field">
+          <span>Tipo</span>
+          <select id="editor-annotation-label">
+            <option>nota</option>
+            <option>persona</option>
+            <option>luogo</option>
+            <option>bene</option>
+            <option>formula giuridica</option>
+            <option>variante</option>
+            <option>incertezza testuale</option>
+          </select>
+        </label>
+        <label class="field"><span>Nota</span><textarea id="editor-annotation-body" rows="3" required></textarea></label>
+        <label class="field"><span>Fonte / riferimento</span><input id="editor-annotation-source"></label>
+        <button class="primary-button full-width" type="submit">Salva annotazione</button>
+      </form>
+    </section>
+    <aside class="panel editor-annotation-list" id="editor-annotation-panel">
+      <h2>Annotazioni</h2>
+      <div id="editor-annotations"></div>
+    </aside>
+  </div>
+</section>

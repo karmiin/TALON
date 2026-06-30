@@ -1,0 +1,32 @@
+<section class="app-view" id="view-library">
+  <div class="workspace-hero">
+    <div>
+      <p class="eyebrow">Archivio</p>
+      <h1>Documenti</h1>
+      <p class="workspace-copy">Gestione delle trascrizioni e dei metadati.</p>
+    </div>
+    <div class="workspace-actions">
+      <span class="status-dot"></span>
+      <div>
+        <strong>Storage locale</strong>
+        <p>SQLite e file del progetto.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="corpus-stats" aria-label="Statistiche della raccolta di testi"></div>
+
+  <section class="panel corpus-panel">
+    <div class="panel-heading corpus-toolbar">
+      <div>
+        <p class="eyebrow">Archivio di lavoro</p>
+        <h2>Documenti</h2>
+      </div>
+      <label class="search-box">
+        <span class="sr-only">Filtra documenti</span>
+        <input id="document-filter" type="search" placeholder="Cerca titolo, luogo, genere...">
+      </label>
+    </div>
+    <div id="document-list" class="document-list" aria-live="polite"></div>
+  </section>
+</section>

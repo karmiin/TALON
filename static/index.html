@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TALON, Text Analysis and Latin Organization Network.">
+  <title>TALON | Text Analysis and Latin Organization Network</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body data-current-view="home">
+  <a class="skip-link" href="#main">Vai al contenuto</a>
+  <header class="site-header">
+    <a class="brand" href="#" data-view="home" aria-label="TALON, home">
+      <span class="brand-mark">TA</span>
+      <span>
+        <strong>TALON</strong>
+        <small>Latin text analysis suite</small>
+      </span>
+    </a>
+    <nav class="top-nav" aria-label="Navigazione principale">
+      <button class="nav-button is-active" data-view="home">Dashboard</button>
+      <button class="nav-button" data-view="library">Testi</button>
+      <button class="nav-button" data-view="editor">Editor</button>
+      <button class="nav-button" data-view="pipeline">Pipeline</button>
+      <button class="nav-button" data-view="reports">Report</button>
+    </nav>
+    <div class="header-actions">
+      <button class="primary-button" id="open-import" type="button">Importa</button>
+    </div>
+  </header>
+
+  <aside class="app-rail" aria-label="Strumenti TALON">
+    <button class="rail-button is-active" data-view="home" title="Dashboard"><span>HM</span><strong>Dashboard</strong></button>
+    <button class="rail-button" data-view="library" title="Testi"><span>TXT</span><strong>Testi</strong></button>
+    <button class="rail-button" data-view="editor" title="Editor"><span>ED</span><strong>Editor</strong></button>
+    <button class="rail-button" data-view="pipeline" title="Pipeline"><span>RUN</span><strong>Pipeline</strong></button>
+    <button class="rail-button" data-view="reports" title="Report"><span>PDF</span><strong>Report</strong></button>
+    <button class="rail-button" data-view="affinity" title="Affinità"><span>NET</span><strong>Affinità</strong></button>
+    <button class="rail-button" data-view="legal" title="Giuridico"><span>LEX</span><strong>Giuridico</strong></button>
+    <button class="rail-button" data-view="diff" title="Diff"><span>DF</span><strong>Diff</strong></button>
+    <button class="rail-button" data-view="voyant" title="Voyant"><span>VY</span><strong>Voyant</strong></button>
+    <button class="rail-button" data-view="collatinus" title="Collatinus"><span>COL</span><strong>Collatinus</strong></button>
+    <button class="rail-button" data-view="modules" title="Moduli"><span>MOD</span><strong>Moduli</strong></button>
+  </aside>
+
+  <main id="main">
+    <div id="dynamic-tool-views"></div>
+
+  </main>
+
+  <dialog id="import-dialog">
+    <form id="import-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Nuovo documento</p>
+          <h2>Importa una trascrizione</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-dialog aria-label="Chiudi">x</button>
+      </div>
+      <div class="import-choice" role="tablist" aria-label="Tipo di importazione">
+        <button type="button" class="choice-button is-active" data-import-mode="file">File Word, TXT o PDF</button>
+        <button type="button" class="choice-button" data-import-mode="paste">Incolla testo</button>
+      </div>
+      <label class="drop-zone" id="file-zone">
+        <input id="import-file" name="file" type="file" accept=".docx,.txt,.pdf">
+        <strong>Scegli un file .docx, .txt o .pdf</strong>
+        <span>Il file originale viene conservato con hash SHA-256. I PDF devono contenere testo estraibile; le scansioni richiedono OCR prima dell'import.</span>
+      </label>
+      <div class="import-backend-status" id="import-backend-status">
+        Controllo supporto PDF...
+      </div>
+      <label class="field is-hidden" id="paste-zone">
+        <span>Trascrizione originale</span>
+        <small class="field-help">Nel linguaggio filologico puo essere chiamata anche "testo diplomatico".</small>
+        <textarea id="import-text" rows="8" placeholder="Incolla qui il testo come e stato trascritto..."></textarea>
+      </label>
+      <div class="form-grid">
+        <label class="field span-2">
+          <span>Titolo *</span>
+          <input id="import-title" name="title" required>
+        </label>
+        <label class="field">
+          <span>Copia, testimone o segnatura</span>
+            <input id="import-witness" name="witness">
+        </label>
+        <label class="field">
+          <span>Autore o attribuzione</span>
+          <input id="import-author" name="author" placeholder="ignoto">
+        </label>
+        <label class="field">
+          <span>Datazione</span>
+          <input id="import-date" name="date_label" placeholder="es. 774-897">
+        </label>
+        <label class="field">
+          <span>Periodo</span>
+          <select id="import-period" name="period">
+            <option value="">Da verificare</option>
+            <option>classico</option>
+            <option>tardoantico</option>
+            <option>alto medioevo</option>
+            <option>basso medioevo</option>
+            <option>umanistico / moderno</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Luogo / provenienza</span>
+          <input id="import-place" name="place">
+        </label>
+        <label class="field">
+          <span>Genere</span>
+          <input id="import-genre" name="genre" placeholder="es. carta di vendita">
+        </label>
+        <label class="field span-2">
+          <span>Note sul file e sulla trascrizione</span>
+          <textarea id="import-notes" name="notes" rows="3"></textarea>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <p id="import-status" class="form-status" role="status"></p>
+        <button type="button" class="secondary-button" data-close-dialog>Annulla</button>
+        <button type="submit" class="primary-button">Importa nella raccolta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="document-dialog" class="document-dialog">
+    <div id="document-content"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

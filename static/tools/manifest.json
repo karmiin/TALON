@@ -1,0 +1,60 @@
+[
+  {
+    "id": "home",
+    "view": "/tools/home.html"
+  },
+  {
+    "id": "modules",
+    "view": "/tools/modules.html",
+    "module": "/js/tools/modules.js"
+  },
+  {
+    "id": "tool-detail",
+    "view": "/tools/tool-detail.html"
+  },
+  {
+    "id": "editor",
+    "view": "/tools/editor.html",
+    "module": "/js/tools/editor.js"
+  },
+  {
+    "id": "library",
+    "view": "/tools/library.html",
+    "module": "/js/tools/library.js"
+  },
+  {
+    "id": "pipeline",
+    "view": "/tools/pipeline.html",
+    "module": "/js/tools/pipeline.js"
+  },
+  {
+    "id": "reports",
+    "view": "/tools/reports.html",
+    "module": "/js/tools/reports.js"
+  },
+  {
+    "id": "affinity",
+    "view": "/tools/affinity.html",
+    "module": "/js/tools/affinity.js"
+  },
+  {
+    "id": "legal",
+    "view": "/tools/legal.html",
+    "module": "/js/tools/legal.js"
+  },
+  {
+    "id": "diff",
+    "view": "/tools/diff.html",
+    "module": "/js/tools/diff.js"
+  },
+  {
+    "id": "voyant",
+    "view": "/tools/voyant.html",
+    "module": "/js/tools/voyant.js"
+  },
+  {
+    "id": "collatinus",
+    "view": "/tools/collatinus.html",
+    "module": "/js/tools/collatinus.js"
+  }
+]

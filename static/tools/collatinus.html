@@ -1,0 +1,48 @@
+<section class="app-view" id="view-collatinus">
+  <header class="tool-page-header">
+    <div>
+      <p class="eyebrow">Lemmatizzazione esterna</p>
+      <h1>Collatinus</h1>
+      <p>Lemmatizza e analizza morfologicamente i testi latini tramite Collatinus-web/Biblissima.</p>
+    </div>
+  </header>
+  <div class="tool-workspace">
+    <aside class="panel tool-controls">
+      <h2>Testi</h2>
+      <div id="collatinus-document-list" class="check-list"></div>
+      <label class="field">
+        <span>Operazione</span>
+        <select id="collatinus-action">
+          <option value="lemmatise">Lemmatizza</option>
+          <option value="analyse">Analisi morfologica</option>
+          <option value="tag">Tag</option>
+          <option value="scan">Scansione metrica</option>
+          <option value="accentuate">Accentazione</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Lingua delle definizioni</span>
+        <select id="collatinus-language">
+          <option value="it" selected>Italiano</option>
+          <option value="en">Inglese</option>
+          <option value="fr">Francese</option>
+          <option value="de">Tedesco</option>
+          <option value="es">Spagnolo</option>
+        </select>
+      </label>
+      <fieldset class="normalization-box">
+        <legend>Opzioni</legend>
+        <label><input id="collatinus-medieval" type="checkbox"> Grafie medievali</label>
+      </fieldset>
+      <button class="primary-button full-width" id="run-collatinus-tool">Esegui Collatinus</button>
+      <a class="secondary-button full-width" href="https://outils.biblissima.fr/en/collatinus-web/index.php" target="_blank" rel="noreferrer">Apri sito originale</a>
+    </aside>
+    <div class="tool-results" id="collatinus-tool-results">
+      <div class="empty-state panel">
+        <span class="empty-glyph">C</span>
+        <h2>Seleziona uno o più testi</h2>
+        <p>Il risultato viene mostrato in TALON, isolato in un riquadro sandbox perché arriva da Collatinus-web.</p>
+      </div>
+    </div>
+  </div>
+</section>

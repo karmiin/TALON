@@ -1,0 +1,321 @@
+{
+  "modules": [
+    {
+      "id": "tool_library",
+      "label": "Archivio testi",
+      "category": "tool",
+      "status": "active",
+      "description": "Import, lettura e annotazione delle fonti.",
+      "outputs": ["documenti", "annotazioni", "metadati"],
+      "ui": {
+        "view": "library",
+        "icon": "01",
+        "primary": true
+      },
+      "order": 10
+    },
+    {
+      "id": "tool_pipeline",
+      "label": "Pipeline di analisi",
+      "category": "tool",
+      "status": "active",
+      "description": "Run configurabili con parser, moduli e report.",
+      "outputs": ["run pipeline", "report stampabile"],
+      "ui": {
+        "view": "pipeline",
+        "icon": "02"
+      },
+      "order": 20
+    },
+    {
+      "id": "tool_editor",
+      "label": "Editor testi",
+      "category": "tool",
+      "status": "active",
+      "description": "Modifica controllata delle trascrizioni e gestione annotazioni.",
+      "outputs": ["testo modificato", "annotazioni", "anteprima evidenziata"],
+      "ui": {
+        "view": "editor",
+        "icon": "E"
+      },
+      "order": 15
+    },
+    {
+      "id": "tool_reports",
+      "label": "Report Center",
+      "category": "tool",
+      "status": "active",
+      "description": "Archivio dei run con apertura HTML e download PDF.",
+      "outputs": ["storico run", "report HTML/PDF"],
+      "ui": {
+        "view": "reports",
+        "icon": "R"
+      },
+      "order": 25
+    },
+    {
+      "id": "tool_affinity",
+      "label": "Affinità testuale",
+      "category": "tool",
+      "status": "active",
+      "description": "Grafo e albero per vedere se frammenti diversi hanno lessico o formule in comune.",
+      "outputs": ["grafo a soglia", "cluster", "termini condivisi"],
+      "ui": {
+        "view": "affinity",
+        "icon": "F"
+      },
+      "order": 28
+    },
+    {
+      "id": "tool_legal_terms",
+      "label": "Termini giuridici",
+      "category": "tool",
+      "status": "active",
+      "description": "Conteggi e highlight di lessico giuridico.",
+      "outputs": ["totali", "distribuzione per testo", "testi evidenziati"],
+      "ui": {
+        "view": "legal",
+        "icon": "03"
+      },
+      "order": 30
+    },
+    {
+      "id": "tool_diff",
+      "label": "Differenze tra testi",
+      "category": "tool",
+      "status": "active",
+      "description": "Collazione visuale tra due trascrizioni.",
+      "outputs": ["diff a due colonne", "blocchi varianti"],
+      "ui": {
+        "view": "diff",
+        "icon": "04"
+      },
+      "order": 40
+    },
+    {
+      "id": "tool_voyant",
+      "label": "Voyant workspace",
+      "category": "tool",
+      "status": "active",
+      "description": "Apertura integrata dei tool Voyant.",
+      "outputs": ["iframe Voyant", "link esterno"],
+      "references": [
+        {
+          "label": "Voyant embedding",
+          "url": "https://voyant-tools.org/docs/tutorial-embedding.html"
+        }
+      ],
+      "ui": {
+        "view": "voyant",
+        "icon": "05"
+      },
+      "order": 50
+    },
+    {
+      "id": "tool_collatinus",
+      "label": "Collatinus",
+      "category": "tool",
+      "status": "active",
+      "description": "Lemmatizzazione e analisi morfologica latina tramite Collatinus-web.",
+      "outputs": ["lemmi", "analisi morfologica", "tag", "scansione", "accentazione"],
+      "references": [
+        {
+          "label": "Collatinus-web Biblissima",
+          "url": "https://outils.biblissima.fr/en/collatinus-web/index.php"
+        },
+        {
+          "label": "Source code",
+          "url": "https://github.com/biblissima/collatinus"
+        }
+      ],
+      "ui": {
+        "view": "collatinus",
+        "icon": "C"
+      },
+      "order": 55
+    },
+    {
+      "id": "pipeline_ingest",
+      "label": "Importazione",
+      "category": "pipeline",
+      "status": "active",
+      "description": "Conserva sorgente, hash, metadati e testo diplomatico.",
+      "order": 10
+    },
+    {
+      "id": "pipeline_normalize",
+      "label": "Normalizzazione",
+      "category": "pipeline",
+      "status": "active",
+      "description": "Applica regole reversibili: spazi, minuscole, j/i, v/u.",
+      "order": 20
+    },
+    {
+      "id": "pipeline_linguistic_layer",
+      "label": "Livello linguistico",
+      "category": "pipeline",
+      "status": "active",
+      "description": "Forme normalizzate come baseline, oppure LatinCy per lemmi, POS, morfologia e sintassi.",
+      "order": 30
+    },
+    {
+      "id": "pipeline_analysis",
+      "label": "Analisi",
+      "category": "pipeline",
+      "status": "active",
+      "description": "Moduli indipendenti: lessico, stile, passi simili, termini giuridici.",
+      "order": 40
+    },
+    {
+      "id": "pipeline_validation",
+      "label": "Validazione",
+      "category": "pipeline",
+      "status": "active",
+      "description": "KWIC, esempi, annotazioni e ritorno al testo.",
+      "order": 50
+    },
+    {
+      "id": "pipeline_report",
+      "label": "Report",
+      "category": "pipeline",
+      "status": "active",
+      "description": "Output stampabile con risultati e configurazione.",
+      "order": 60
+    },
+    {
+      "id": "lexicon",
+      "label": "Lessico e concordanze",
+      "category": "analysis",
+      "status": "active",
+      "description": "Frequenze, varieta lessicale, collocazioni logDice e KWIC per ritornare alle occorrenze nel testo.",
+      "inputs": ["testo normalizzato", "profilo di normalizzazione"],
+      "outputs": ["metriche lessicali", "collocazioni", "contesti KWIC"],
+      "references": [
+        {
+          "label": "logDice, Rychly 2008",
+          "url": "https://www.sketchengine.eu/wp-content/uploads/2015/03/Lexicographer-Friendly_2008.pdf"
+        }
+      ],
+      "order": 10
+    },
+    {
+      "id": "stylometry",
+      "label": "Profilo stilometrico",
+      "category": "analysis",
+      "status": "active",
+      "description": "Costruisce una tabella di frequenze e calcola Delta, distanza coseno, PCA e contributi leggibili.",
+      "inputs": ["testi selezionati", "feature set", "numero feature"],
+      "outputs": ["heatmap", "PCA", "contributi alla distanza"],
+      "references": [
+        {
+          "label": "Eder, Rybicki, Kestemont 2016",
+          "url": "https://journal.r-project.org/articles/RJ-2016-007/"
+        }
+      ],
+      "order": 20
+    },
+    {
+      "id": "parallel_passages",
+      "label": "Passi simili",
+      "category": "analysis",
+      "status": "active",
+      "description": "Segmenta i testi, pesa i termini con TF-IDF e confronta i segmenti con similarita coseno.",
+      "inputs": ["testi selezionati", "profilo di normalizzazione"],
+      "outputs": ["coppie di passi", "termini condivisi"],
+      "references": [
+        {
+          "label": "Manning et al., Introduction to Information Retrieval",
+          "url": "https://nlp.stanford.edu/IR-book/"
+        }
+      ],
+      "order": 30
+    },
+    {
+      "id": "textual_affinity",
+      "label": "Albero di affinità testuale",
+      "category": "analysis",
+      "status": "active",
+      "description": "Raggruppa molti testi in un albero di somiglianza lessicale/formulare e mostra i termini condivisi che spiegano i cluster.",
+      "inputs": ["tre o più testi", "parser selezionato", "profilo di normalizzazione"],
+      "outputs": ["dendrogramma", "cluster", "termini condivisi"],
+      "notes": ["Segnala affinità da verificare; non dimostra automaticamente autore comune o dipendenza genealogica."],
+      "order": 35
+    },
+    {
+      "id": "legal_terms",
+      "label": "Termini giuridici",
+      "category": "analysis",
+      "status": "active",
+      "description": "Conta famiglie terminologiche giuridiche per documento e autore, con esempi nel contesto.",
+      "inputs": ["testi selezionati", "lista di termini o famiglie", "parser selezionato"],
+      "outputs": ["frequenze per documento", "aggregazione per autore", "contesti"],
+      "notes": ["Con LatinCy usa i lemmi prodotti dal parser; altrimenti usa forme normalizzate e famiglie dichiarate."],
+      "order": 40
+    },
+    {
+      "id": "forms",
+      "label": "Forme normalizzate",
+      "category": "parser",
+      "status": "active",
+      "description": "Baseline senza lemmatizzazione: usa token normalizzati con il profilo scelto.",
+      "inputs": ["testo normalizzato", "profilo di normalizzazione"],
+      "outputs": ["forme normalizzate"],
+      "notes": ["Utile come controllo: non riduce terra/terram/terrae allo stesso lemma."],
+      "order": 5
+    },
+    {
+      "id": "latincy",
+      "label": "LatinCy",
+      "category": "parser",
+      "status": "active",
+      "description": "Pipeline spaCy per tokenizzazione, POS, morfologia e lemmatizzazione del latino. Buona baseline pratica.",
+      "inputs": ["testo normalizzato"],
+      "outputs": ["lemmi", "POS", "morfologia", "dipendenze"],
+      "notes": ["Da valutare su un campione annotato del corpus reale."],
+      "references": [
+        {
+          "label": "Burns 2023, LatinCy",
+          "url": "https://arxiv.org/abs/2305.04365"
+        }
+      ],
+      "order": 20
+    },
+    {
+      "id": "voyant_export",
+      "label": "Voyant Tools",
+      "category": "integration",
+      "status": "active",
+      "description": "Apre i testi selezionati nel workspace Voyant integrato; mantiene l'export zip solo come fallback per VoyantServer locale.",
+      "inputs": ["testi selezionati"],
+      "outputs": ["pannello Voyant integrato", "link esterno", "fallback .zip"],
+      "notes": ["L'integrazione primaria passa dalla UI TALON. L'export resta disponibile per corpus grandi o installazioni VoyantServer locali."],
+      "references": [
+        {
+          "label": "Voyant Tools GitHub",
+          "url": "https://github.com/voyanttools/Voyant"
+        },
+        {
+          "label": "VoyantServer locale",
+          "url": "https://beta.voyant-tools.org/docs/tutorial-server.html"
+        }
+      ],
+      "order": 10
+    },
+    {
+      "id": "research_brief",
+      "label": "Report di ricerca",
+      "category": "report_style",
+      "status": "active",
+      "description": "Sintesi leggibile con metadati, moduli attivi e termini giuridici.",
+      "order": 10
+    },
+    {
+      "id": "technical_appendix",
+      "label": "Appendice tecnica",
+      "category": "report_style",
+      "status": "active",
+      "description": "Layout piu denso per parametri, fonti e audit delle analisi.",
+      "order": 20
+    }
+  ]
+}
