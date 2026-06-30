@@ -72,6 +72,11 @@ function hideEditorAnnotationForm() {
   ctxRef.$("#editor-annotation-form")?.classList.remove("is-visible");
 }
 
+function hasEditorChanges() {
+  const { state } = ctxRef;
+  return Boolean(state.editor.document) && editorTextValue() !== state.editor.originalText;
+}
+
 async function loadEditorDocument(documentId = null) {
   const { $, api, state, toast } = ctxRef;
   const select = $("#editor-document-select");
@@ -79,6 +84,14 @@ async function loadEditorDocument(documentId = null) {
   if (!id) {
     toast("Seleziona un documento.");
     return;
+  }
+  if (state.editor.document?.id === id && !hasEditorChanges()) return;
+  if (state.editor.document?.id !== id && hasEditorChanges()) {
+    const keepEditing = !window.confirm("Ci sono modifiche non salvate. Cambiare documento senza salvare?");
+    if (keepEditing) {
+      select.value = String(state.editor.document.id);
+      return;
+    }
   }
   $("#editor-status").textContent = "Caricamento...";
   try {
@@ -268,11 +281,14 @@ function renderEditorDocumentSelect() {
   const select = $("#editor-document-select");
   if (!select) return;
   const current = select.value || state.editor.document?.id || "";
-  select.innerHTML = state.documents.map((document) => `
+  select.innerHTML = state.documents.length ? state.documents.map((document) => `
     <option value="${document.id}">${escapeHtml(document.title)}</option>
-  `).join("");
+  `).join("") : `<option value="">Nessun documento disponibile</option>`;
   if (current && state.documents.some((document) => String(document.id) === String(current))) {
     select.value = String(current);
+  }
+  if (!state.editor.document && state.documents.length) {
+    loadEditorDocument(select.value || state.documents[0].id);
   }
 }
 
@@ -282,15 +298,9 @@ export function init(ctx) {
   onDocumentsChanged(renderEditorDocumentSelect);
   renderEditorDocumentSelect();
 
-  $("#editor-load-document")?.addEventListener("click", () => loadEditorDocument());
   $("#editor-document-select")?.addEventListener("change", () => loadEditorDocument());
   $("#editor-save")?.addEventListener("click", () => saveEditorDocument());
   $("#editor-reset")?.addEventListener("click", resetEditorDocument);
-  $("#editor-toggle-annotations")?.addEventListener("click", () => $("#editor-annotation-panel")?.classList.toggle("is-collapsed"));
-  $("#editor-annotate-selection")?.addEventListener("click", () => {
-    captureEditorSelection();
-    showEditorAnnotationForm();
-  });
   $("#editor-text")?.addEventListener("select", captureEditorSelection);
   $("#editor-text")?.addEventListener("keyup", captureEditorSelection);
   $("#editor-text")?.addEventListener("mouseup", captureEditorSelection);

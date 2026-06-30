@@ -1389,39 +1389,63 @@ body[data-current-view="editor"] main {
 .editor-ribbon {
   position: static;
   z-index: 30;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(260px, 420px) auto minmax(160px, auto);
   align-items: center;
   gap: 8px;
-  min-height: 50px;
+  min-height: 56px;
   margin-bottom: 12px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: var(--radius);
 }
 
+.editor-ribbon-title {
+  min-width: 0;
+}
+
+.editor-ribbon-title strong,
+.editor-ribbon-title span {
+  display: block;
+}
+
+.editor-ribbon-title strong {
+  font-size: 13px;
+}
+
+.editor-ribbon-title span {
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .editor-document-field {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   margin: 0;
-  min-width: 260px;
+  min-width: 0;
 }
 
 .editor-document-field select {
-  min-width: 220px;
+  min-width: 0;
 }
 
-.editor-separator {
-  width: 1px;
-  height: 28px;
-  background: var(--line);
+.editor-ribbon-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .editor-status-line {
-  margin-left: auto;
   color: var(--muted);
   font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .editor-workspace {
@@ -2172,8 +2196,12 @@ body[data-current-view="editor"] main {
   }
 
   .editor-ribbon {
-    top: 0;
+    grid-template-columns: 1fr;
     flex-wrap: wrap;
+  }
+
+  .editor-status-line {
+    text-align: left;
   }
 
   .editor-workspace {

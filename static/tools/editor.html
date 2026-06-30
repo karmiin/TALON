@@ -1,28 +1,28 @@
 <section class="app-view" id="view-editor">
-  <section class="editor-ribbon">
-    <button class="secondary-button" data-view="home">Torna alla home</button>
-    <span class="editor-separator"></span>
+  <section class="editor-ribbon" aria-label="Comandi editor">
+    <div class="editor-ribbon-title">
+      <strong>Editor testi</strong>
+      <span>Modifica la trascrizione; per annotare seleziona un passo e usa il tasto destro.</span>
+    </div>
     <label class="field editor-document-field">
       <span>Documento</span>
       <select id="editor-document-select"></select>
     </label>
-    <button class="secondary-button" id="editor-load-document">Carica</button>
-    <span class="editor-separator"></span>
-    <button class="primary-button" id="editor-save">Salva</button>
-    <button class="secondary-button" id="editor-reset">Ripristina</button>
-    <button class="secondary-button" id="editor-annotate-selection">Annota</button>
-    <button class="secondary-button" id="editor-toggle-annotations">Annotazioni</button>
+    <div class="editor-ribbon-actions">
+      <button class="primary-button" id="editor-save">Salva</button>
+      <button class="secondary-button" id="editor-reset">Ripristina</button>
+    </div>
     <span class="editor-status-line" id="editor-status">Scegli un testo.</span>
   </section>
   <div class="editor-workspace">
     <section class="editor-document-stage">
       <div class="editor-start" id="editor-start">
         <h2>Seleziona un documento</h2>
-        <p>Scegli un testo dalla barra superiore e premi Carica.</p>
+        <p>Scegli un testo dalla barra superiore: il caricamento e automatico.</p>
       </div>
       <div class="editor-page-toolbar">
         <strong id="editor-current-title">Nessun documento caricato</strong>
-        <span>Seleziona testo e usa il tasto destro.</span>
+        <span>Annotazione: selezione + tasto destro.</span>
       </div>
       <div id="editor-text" class="editor-document-page" contenteditable="true" spellcheck="false" aria-label="Editor del testo"></div>
       <div class="editor-context-menu" id="editor-context-menu">
