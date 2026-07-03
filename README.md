@@ -2,7 +2,7 @@
 
 TALON significa Text Analysis and Latin Organization Network. E una webapp locale per importare, leggere, annotare e analizzare trascrizioni latine, con attenzione a testi storici e documentari.
 
-Il progetto non e pensato come un sistema che decide automaticamente l'interpretazione filologica. Produce indizi controllabili: frequenze, contesti, differenze tra testi, termini giuridici evidenziati, affinità lessicali e report di lavoro.
+Il progetto non e pensato come un sistema che decide automaticamente l'interpretazione filologica. Produce indizi controllabili: frequenze, contesti, differenze tra testi, termini giuridici evidenziati, PCA lessicale e report di lavoro.
 
 ## Funzioni principali
 
@@ -12,7 +12,7 @@ Il progetto non e pensato come un sistema che decide automaticamente l'interpret
 - Lessico: conteggi, forme ricorrenti, varieta lessicale, KWIC e collocazioni.
 - Termini giuridici: famiglie lessicali configurabili e testo completo con occorrenze evidenziate.
 - Differenze tra due testi: confronto visuale con sostituzioni, omissioni e aggiunte.
-- Affinità testuale: grafo tra piu testi basato su vicinanza lessicale/formulare.
+- PCA: mappa PC1/PC2 dei testi, con switch tra lessico/lemmi e function words.
 - Voyant: apertura integrata di un workspace Voyant, con export zip come fallback.
 - Collatinus: chiamata a Collatinus-web per analisi morfologica e lemmatizzazione.
 - Parser linguistici: baseline a forme normalizzate e parser LatinCy opzionale.
@@ -77,10 +77,28 @@ python -m pip install https://huggingface.co/latincy/la_core_web_sm/resolve/main
 $env:TALON_LATINCY_MODEL="la_core_web_sm"
 ```
 
+Su macOS i comandi sono gli stessi, ma l'attivazione del virtualenv e le variabili d'ambiente cambiano:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install "spacy>=3.9,<3.10"
+python -m pip install https://huggingface.co/latincy/la_core_web_sm/resolve/main/la_core_web_sm-3.9.5-py3-none-any.whl
+export TALON_LATINCY_MODEL=la_core_web_sm
+```
+
 ## Avvio
 
 ```powershell
 python app.py --host 127.0.0.1 --port 8000
+```
+
+Su macOS, se `python` non punta a Python 3, usare:
+
+```bash
+python3 app.py --host 127.0.0.1 --port 8000
 ```
 
 Poi aprire:
@@ -112,7 +130,7 @@ python -m unittest -q
 
 `Forme normalizzate` e la baseline: tokenizza il testo dopo la pulizia scelta dall'utente, per esempio minuscole, `j -> i`, `v -> u`. Non riduce automaticamente forme diverse allo stesso lemma.
 
-`LatinCy` usa spaCy e un modello latino come `la_core_web_sm`. Produce CoNLL-U interno con lemma, POS, morfologia e dipendenze. Le analisi che possono usare lemmi, come termini giuridici e affinità, sfruttano questo livello quando disponibile.
+`LatinCy` usa spaCy e un modello latino come `la_core_web_sm`. Produce CoNLL-U interno con lemma, POS, morfologia e dipendenze. Le analisi che possono usare lemmi, come termini giuridici e PCA lessicale, sfruttano questo livello quando disponibile.
 
 ## Integrazioni esterne
 
