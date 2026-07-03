@@ -36,7 +36,7 @@ const VIEW_LABELS = {
   editor: "Editor",
   pipeline: "Pipeline",
   reports: "Report",
-  affinity: "Affinità testuale",
+  affinity: "PCA",
   legal: "Termini giuridici",
   diff: "Diff testi",
   voyant: "Voyant",

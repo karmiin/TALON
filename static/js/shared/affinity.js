@@ -1,30 +1,3 @@
-export function affinityEvidenceLabel(threshold) {
-  if (threshold <= 0.35) return "solo affinità forti";
-  if (threshold <= 0.5) return "affinità probabili";
-  return "esplorativo";
-}
-
-export function shortLabel(value, limit = 26) {
-  const text = String(value || "");
-  return text.length > limit ? `${text.slice(0, limit - 1)}...` : text;
-}
-
-function nodeLabelLines(value) {
-  const words = String(value || "").trim().split(/\s+/).filter(Boolean);
-  const lines = [""];
-  for (const word of words) {
-    const index = lines.length - 1;
-    const candidate = `${lines[index]} ${word}`.trim();
-    if (candidate.length <= 18 || lines.length >= 2) {
-      lines[index] = candidate;
-    } else {
-      lines.push(word);
-    }
-  }
-  if (!lines[0]) return ["Testo"];
-  return lines.slice(0, 2).map((line) => shortLabel(line, 19));
-}
-
 export function affinityPairs(payload, threshold) {
   const documents = payload.documents || [];
   const matrix = payload.distance_matrix || [];
@@ -50,126 +23,118 @@ export function affinityPairs(payload, threshold) {
   return { pairs, edges };
 }
 
-export function affinityComponents(count, edges) {
-  const graph = Array.from({ length: count }, () => []);
-  edges.forEach((edge) => {
-    graph[edge.left].push(edge.right);
-    graph[edge.right].push(edge.left);
-  });
-  const seen = new Set();
-  const components = [];
-  for (let index = 0; index < count; index += 1) {
-    if (seen.has(index)) continue;
-    const stack = [index];
-    const component = [];
-    seen.add(index);
-    while (stack.length) {
-      const current = stack.pop();
-      component.push(current);
-      graph[current].forEach((next) => {
-        if (!seen.has(next)) {
-          seen.add(next);
-          stack.push(next);
-        }
-      });
-    }
-    components.push(component.sort((a, b) => a - b));
+function pcaBounds(points, axis) {
+  const values = points.map((point) => Number(point[axis] || 0));
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 0);
+  if (Math.abs(max - min) < 1e-9) return { min: -1, max: 1 };
+  const padding = (max - min) * 0.12;
+  return { min: min - padding, max: max + padding };
+}
+
+function pcaScale(value, bounds, start, end) {
+  return start + ((Number(value || 0) - bounds.min) / (bounds.max - bounds.min)) * (end - start);
+}
+
+export function renderPcaPlot(ctx, payload, options = {}) {
+  const pca = payload.pca || {};
+  const points = pca.points || [];
+  if (!points.length) {
+    return `<div class="empty-state"><p>PCA non disponibile per i testi selezionati.</p></div>`;
   }
-  return components.sort((a, b) => b.length - a.length || a[0] - b[0]);
-}
-
-export function affinityLayout(count, edges) {
-  const width = 760;
-  const nodeWidth = 156;
-  const horizontalGap = 34;
-  const rowGap = 96;
-  const componentGap = 32;
-  const components = affinityComponents(count, edges);
-  const positions = [];
-  let cursorY = 64;
-  components.forEach((component, row) => {
-    const columns = Math.max(1, Math.min(component.length, Math.floor((width - 72) / (nodeWidth + horizontalGap))));
-    const rows = Math.ceil(component.length / columns);
-    component.forEach((nodeIndex, index) => {
-      const localRow = Math.floor(index / columns);
-      const col = index % columns;
-      const itemsInRow = Math.min(columns, component.length - localRow * columns);
-      const usedWidth = itemsInRow * nodeWidth + (itemsInRow - 1) * horizontalGap;
-      const startX = (width - usedWidth) / 2 + nodeWidth / 2;
-      positions[nodeIndex] = {
-        x: startX + col * (nodeWidth + horizontalGap),
-        y: cursorY + localRow * rowGap,
-      };
-    });
-    cursorY += rows * rowGap + (row < components.length - 1 ? componentGap : 0);
-  });
-  const height = Math.max(250, cursorY + 28);
-  return { width, height, positions, components };
-}
-
-export function renderAffinityGraph(ctx, payload, threshold) {
-  const documents = payload.documents || [];
-  const { edges } = affinityPairs(payload, threshold);
-  const { width, height, positions } = affinityLayout(documents.length, edges);
-  const edgeMarkup = edges.map((edge) => {
-    const left = positions[edge.left];
-    const right = positions[edge.right];
-    const strength = Math.max(0.12, 1 - edge.distance);
+  const width = 920;
+  const height = 520;
+  const margin = { left: 72, right: 34, top: 34, bottom: 62 };
+  const xBounds = pcaBounds(points, "x");
+  const yBounds = pcaBounds(points, "y");
+  const xZero = pcaScale(0, xBounds, margin.left, width - margin.right);
+  const yZero = pcaScale(0, yBounds, height - margin.bottom, margin.top);
+  const pointMarkup = points.map((point, index) => {
+    const x = pcaScale(point.x, xBounds, margin.left, width - margin.right);
+    const y = pcaScale(point.y, yBounds, height - margin.bottom, margin.top);
     return `
-      <line class="affinity-edge"
-        x1="${left.x.toFixed(1)}" y1="${left.y.toFixed(1)}"
-        x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}"
-        stroke-width="${(1.5 + strength * 4).toFixed(2)}"
-        opacity="${Math.min(0.9, 0.28 + strength * 0.7).toFixed(2)}">
-        <title>${ctx.escapeHtml(edge.leftTitle)} / ${ctx.escapeHtml(edge.rightTitle)}: distanza ${ctx.formatNumber(edge.distance, 3)}</title>
-      </line>
-    `;
-  }).join("");
-  const nodeMarkup = documents.map((document, index) => {
-    const point = positions[index] || { x: width / 2, y: height / 2 };
-    const lines = nodeLabelLines(document.title);
-    return `
-      <g class="affinity-node" transform="translate(${point.x.toFixed(1)} ${point.y.toFixed(1)})">
-        <rect x="-78" y="-26" width="156" height="52" rx="4"></rect>
-        <text class="affinity-node-index" y="-10">${index + 1}</text>
-        <text class="affinity-node-label" y="6">${ctx.escapeHtml(lines[0])}</text>
-        ${lines[1] ? `<text class="affinity-node-label" y="20">${ctx.escapeHtml(lines[1])}</text>` : ""}
+      <g class="pca-point" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">
+        <circle r="5.5"></circle>
+        <text class="pca-point-index" text-anchor="middle" y="4">${index + 1}</text>
+        <title>${ctx.escapeHtml(point.title)} | PC1 ${ctx.formatNumber(point.x, 3)} | PC2 ${ctx.formatNumber(point.y, 3)} | PC3 ${ctx.formatNumber(point.z || 0, 3)}</title>
       </g>
     `;
   }).join("");
+  const variance = pca.variance || [];
   return `
-    <svg class="affinity-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grafo delle affinità testuali">
-      <rect class="affinity-graph-bg" x="0" y="0" width="${width}" height="${height}" rx="6"></rect>
-      ${edgeMarkup}
-      ${nodeMarkup}
+    <svg class="pca-plot" viewBox="0 0 ${width} ${height}" role="img" aria-label="${ctx.escapeHtml(options.label || "PCA dei testi")}">
+      <rect class="pca-bg" x="0" y="0" width="${width}" height="${height}" rx="6"></rect>
+      <line class="pca-axis" x1="${margin.left}" y1="${yZero.toFixed(1)}" x2="${width - margin.right}" y2="${yZero.toFixed(1)}"></line>
+      <line class="pca-axis" x1="${xZero.toFixed(1)}" y1="${margin.top}" x2="${xZero.toFixed(1)}" y2="${height - margin.bottom}"></line>
+      ${pointMarkup}
+      <text class="pca-axis-label" x="${width / 2}" y="${height - 18}">PC1 ${ctx.formatNumber(variance[0] || 0, 1)}%</text>
+      <text class="pca-axis-label" transform="translate(22 ${height / 2}) rotate(-90)">PC2 ${ctx.formatNumber(variance[1] || 0, 1)}%</text>
     </svg>
   `;
 }
 
-export function renderAffinityMergeCards(ctx, payload, threshold) {
-  const merges = payload.merges || [];
-  const underThreshold = merges.filter((merge) => Number(merge.distance) <= threshold);
-  const visible = (underThreshold.length ? underThreshold : merges).slice(0, 6);
-  if (!visible.length) return `<p class="muted">Nessun cluster disponibile.</p>`;
-  return visible.map((merge) => `
-    <article class="affinity-merge-card ${Number(merge.distance) <= threshold ? "is-linked" : ""}">
-      <strong>${ctx.escapeHtml(merge.left.join(" + "))}</strong>
-      <span>con ${ctx.escapeHtml(merge.right.join(" + "))}</span>
-      <small>Distanza ${ctx.formatNumber(merge.distance, 3)} · ${(merge.shared_terms || []).map(ctx.escapeHtml).join(", ") || "termini dominanti non evidenti"}</small>
-    </article>
-  `).join("");
+export function renderPcaDocumentKey(ctx, payload) {
+  const points = payload.pca?.points || [];
+  if (!points.length) return "";
+  return `
+    <div class="pca-document-key">
+      ${points.map((point, index) => `
+        <article>
+          <b>${index + 1}</b>
+          <span>${ctx.escapeHtml(point.title)}</span>
+          <small>PC1 ${ctx.formatNumber(point.x, 3)} · PC2 ${ctx.formatNumber(point.y, 3)}${Number.isFinite(Number(point.z)) ? ` · PC3 ${ctx.formatNumber(point.z, 3)}` : ""}</small>
+        </article>
+      `).join("")}
+    </div>
+  `;
 }
 
-export function renderAffinityPairRows(ctx, payload, threshold) {
-  const { pairs } = affinityPairs(payload, threshold);
-  return pairs.slice(0, 10).map((pair) => `
-    <tr>
-      <td>${ctx.escapeHtml(pair.leftTitle)}</td>
-      <td>${ctx.escapeHtml(pair.rightTitle)}</td>
-      <td>${pair.distance <= threshold ? "forte/probabile" : "debole"}</td>
-      <td>${ctx.formatNumber(pair.affinity * 100, 1)}%</td>
-      <td>${ctx.formatNumber(pair.distance, 3)}</td>
-      <td>${pair.distance <= threshold ? '<span class="runtime-ok">da verificare</span>' : '<span class="runtime-missing">non mostrato</span>'}</td>
-    </tr>
-  `).join("");
+export function renderPcaVariance(ctx, payload) {
+  const variance = payload.pca?.variance || [];
+  return `
+    <div class="pca-variance-strip">
+      <article><strong>${ctx.formatNumber(variance[0] || 0, 1)}%</strong><span>PC1</span></article>
+      <article><strong>${ctx.formatNumber(variance[1] || 0, 1)}%</strong><span>PC2</span></article>
+      <article><strong>${ctx.formatNumber((variance[0] || 0) + (variance[1] || 0), 1)}%</strong><span>piano 2D</span></article>
+    </div>
+  `;
+}
+
+export function renderPcaLoadings(ctx, payload) {
+  const loadings = payload.pca?.loadings || [];
+  if (!loadings.length) return "";
+  return `
+    <div class="pca-loadings">
+      ${loadings.slice(0, 3).map((axisRows, axisIndex) => `
+        <article>
+          <h3>Asse PC${axisIndex + 1}</h3>
+          ${(axisRows || []).slice(0, 8).map((item) => `
+            <div class="pca-loading-row">
+              <span>${ctx.escapeHtml(item.feature)}</span>
+              <b>${ctx.formatNumber(item.weight, 3)}</b>
+            </div>
+          `).join("") || `<p class="muted">Nessun peso disponibile.</p>`}
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+export function renderDocumentFeatureProfiles(ctx, payload) {
+  const profiles = payload.document_profiles || [];
+  if (!profiles.length) return "";
+  return `
+    <div class="profile-card-grid">
+      ${profiles.map((profile) => `
+        <article class="profile-card">
+          <h3>${ctx.escapeHtml(profile.title)}</h3>
+          <div class="profile-feature-list">
+            ${(profile.features || []).slice(0, 8).map((item) => `
+              <span><b>${ctx.escapeHtml(item.feature)}</b>${ctx.formatNumber(item.frequency, 2)}</span>
+            `).join("") || `<p class="muted">Nessuna feature dominante.</p>`}
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
 }

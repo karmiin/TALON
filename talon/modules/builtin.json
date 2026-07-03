@@ -55,14 +55,14 @@
     },
     {
       "id": "tool_affinity",
-      "label": "Affinità testuale",
+      "label": "PCA",
       "category": "tool",
       "status": "active",
-      "description": "Grafo e albero per vedere se frammenti diversi hanno lessico o formule in comune.",
-      "outputs": ["grafo a soglia", "cluster", "termini condivisi"],
+      "description": "Mappa PCA 2D con switch tra lessico/lemmi e function words.",
+      "outputs": ["PCA 2D", "assi interpretati", "distanze"],
       "ui": {
         "view": "affinity",
-        "icon": "F"
+        "icon": "PCA"
       },
       "order": 28
     },
@@ -215,6 +215,23 @@
       "order": 20
     },
     {
+      "id": "function_words",
+      "label": "Function words",
+      "category": "analysis",
+      "status": "active",
+      "description": "Confronta i testi usando solo parole grammaticali ricorrenti, meno dipendenti dal tema trattato.",
+      "inputs": ["testi selezionati", "profilo di normalizzazione"],
+      "outputs": ["PCA", "distanze Delta/coseno", "contributi delle function words"],
+      "notes": ["Utile come controllo stilometrico: non considera nomi propri, lessico giuridico o parole tematiche."],
+      "references": [
+        {
+          "label": "Eder, Rybicki, Kestemont 2016",
+          "url": "https://journal.r-project.org/articles/RJ-2016-007/"
+        }
+      ],
+      "order": 25
+    },
+    {
       "id": "parallel_passages",
       "label": "Passi simili",
       "category": "analysis",
@@ -232,13 +249,13 @@
     },
     {
       "id": "textual_affinity",
-      "label": "Albero di affinità testuale",
+      "label": "PCA lessicale",
       "category": "analysis",
       "status": "active",
-      "description": "Raggruppa molti testi in un albero di somiglianza lessicale/formulare e mostra i termini condivisi che spiegano i cluster.",
+      "description": "Colloca molti testi in una mappa PCA lessicale e mostra i termini che spiegano gli assi.",
       "inputs": ["tre o più testi", "parser selezionato", "profilo di normalizzazione"],
-      "outputs": ["dendrogramma", "cluster", "termini condivisi"],
-      "notes": ["Segnala affinità da verificare; non dimostra automaticamente autore comune o dipendenza genealogica."],
+      "outputs": ["PCA", "assi interpretati", "termini caratterizzanti"],
+      "notes": ["Mostra vicinanze lessicali da verificare; non dimostra automaticamente autore comune o dipendenza genealogica."],
       "order": 35
     },
     {

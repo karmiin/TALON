@@ -1,16 +1,12 @@
 import {
-  affinityEvidenceLabel,
   affinityPairs,
-  renderAffinityGraph,
-  renderAffinityMergeCards,
-  renderAffinityPairRows,
+  renderPcaDocumentKey,
+  renderPcaLoadings,
+  renderPcaPlot,
+  renderPcaVariance,
 } from "../shared/affinity.js";
 
-function affinityThreshold(ctx) {
-  return Number(ctx.$("#affinity-threshold")?.value || 0.55);
-}
-
-function selectedAffinityProfile(ctx) {
+function selectedPcaProfile(ctx) {
   return {
     lower: ctx.$("#affinity-lower")?.checked ?? true,
     j_to_i: ctx.$("#affinity-ji")?.checked ?? false,
@@ -18,105 +14,195 @@ function selectedAffinityProfile(ctx) {
   };
 }
 
-function selectedFeatureCount(ctx) {
+function selectedMode(ctx) {
+  return ctx.$('input[name="pca-mode"]:checked')?.value || "lexical";
+}
+
+function selectedFeatureCount(ctx, mode) {
   const value = ctx.$("#affinity-feature-count")?.value || "auto";
+  if (mode === "function") return value === "auto" ? 120 : Number(value);
   return value === "auto" ? "auto" : Number(value);
 }
 
-function renderAffinityToolResults(ctx, payload) {
-  const threshold = affinityThreshold(ctx);
-  const { pairs, edges } = affinityPairs(payload, threshold);
-  const nearest = pairs[0];
-  const evidenceLabel = affinityEvidenceLabel(threshold);
+function modeCopy(mode) {
+  if (mode === "function") {
+    return {
+      eyebrow: "PCA function words",
+      title: "Parole grammaticali",
+      description: "Profilo non tematico: congiunzioni, preposizioni, pronomi e particelle.",
+      empty: "Calcolo della PCA sulle function words...",
+    };
+  }
+  return {
+    eyebrow: "PCA lessicale",
+    title: "Lessico / lemmi",
+    description: "Profilo contenutistico: parole o lemmi pieni, senza function words.",
+    empty: "Calcolo della PCA lessicale...",
+  };
+}
+
+function parserLabel(payload, mode) {
+  if (mode === "function") return "Function words · forme normalizzate";
+  if (payload.parser === "latincy") return "LatinCy · lemmi";
+  return "Forme normalizzate";
+}
+
+function renderFeaturePreview(ctx, payload, mode) {
+  const features = (payload.features || []).slice(0, 12);
+  if (!features.length) return "";
+  return `
+    <div class="pca-feature-preview">
+      <strong>${ctx.escapeHtml(parserLabel(payload, mode))}</strong>
+      <span>${features.map((feature) => ctx.escapeHtml(feature)).join(" · ")}</span>
+    </div>
+  `;
+}
+
+function renderDistanceRows(ctx, payload, mode) {
+  let rows = [];
+  if (mode === "function") {
+    rows = [...(payload.explanations || [])]
+      .sort((a, b) => a.delta - b.delta)
+      .slice(0, 8)
+      .map((pair) => ({
+        left: pair.left_title,
+        right: pair.right_title,
+        metric: ctx.formatNumber(pair.delta, 3),
+        cosine: ctx.formatNumber(pair.cosine, 3),
+        features: pair.contributors.slice(0, 5).map((item) => item.feature).join(", "),
+      }));
+  } else {
+    rows = affinityPairs(payload, 1).pairs.slice(0, 8).map((pair) => ({
+      left: pair.leftTitle,
+      right: pair.rightTitle,
+      metric: `${ctx.formatNumber(pair.affinity * 100, 1)}%`,
+      cosine: ctx.formatNumber(pair.distance, 3),
+      features: "",
+    }));
+  }
+  if (!rows.length) return `<p class="muted">Nessuna coppia disponibile.</p>`;
+  return `
+    <div class="legal-table-wrap">
+      <table class="legal-table">
+        <thead>
+          <tr>
+            <th>Testo A</th>
+            <th>Testo B</th>
+            <th>${mode === "function" ? "Delta" : "Similarità"}</th>
+            <th>Coseno</th>
+            ${mode === "function" ? "<th>Feature principali</th>" : ""}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>${ctx.escapeHtml(row.left)}</td>
+              <td>${ctx.escapeHtml(row.right)}</td>
+              <td><strong>${ctx.escapeHtml(row.metric)}</strong></td>
+              <td>${ctx.escapeHtml(row.cosine)}</td>
+              ${mode === "function" ? `<td>${ctx.escapeHtml(row.features)}</td>` : ""}
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderWarnings(ctx, payload) {
+  const warnings = payload.warnings || (payload.warning ? [payload.warning] : []);
+  if (!warnings.length) return "";
+  return `<div class="warning-list">${warnings.map((warning) => `<div class="warning">${ctx.escapeHtml(warning)}</div>`).join("")}</div>`;
+}
+
+function renderPcaToolResults(ctx, payload, mode) {
+  const copy = modeCopy(mode);
   ctx.$("#affinity-tool-results").innerHTML = `
-    <section class="panel result-panel affinity-tool-panel">
+    <section class="panel result-panel pca-result-panel">
       <div class="result-heading">
         <div>
-          <p class="eyebrow">Grafo di affinità</p>
-          <h2>${payload.documents.length} testi · ${edges.length} legami disegnati</h2>
-          <p>Il grafo mostra solo i testi con affinità lessicale/formulare abbastanza forte da meritare verifica.</p>
+          <p class="eyebrow">${copy.eyebrow}</p>
+          <h2>${copy.title}</h2>
+          <p>${copy.description}</p>
         </div>
-        <span class="badge">tutto l'archivio</span>
+        <span class="badge">${payload.documents.length} testi · ${payload.max_features} feature</span>
       </div>
+      ${renderPcaVariance(ctx, payload)}
+      ${renderFeaturePreview(ctx, payload, mode)}
       <div class="affinity-dashboard">
-        <div class="affinity-graph-shell">
-          ${renderAffinityGraph(ctx, payload, threshold)}
+        <div class="affinity-graph-shell pca-shell">
+          ${renderPcaPlot(ctx, payload, { label: copy.eyebrow })}
         </div>
-        <aside class="affinity-readout">
-          <article><strong>${ctx.escapeHtml(evidenceLabel)}</strong><span>livello di evidenza</span></article>
-          <article><strong>${edges.length}</strong><span>legami disegnati</span></article>
-          <article><strong>${nearest ? ctx.formatNumber(nearest.distance, 3) : "-"}</strong><span>distanza minima</span></article>
-          <article><strong>${ctx.formatNumber(payload.max_features || 0)}</strong><span>feature usate</span></article>
-          <article><strong>${ctx.formatNumber(payload.shown_features || (payload.features || []).length)}</strong><span>prime feature visibili</span></article>
-        </aside>
+        ${renderPcaDocumentKey(ctx, payload)}
       </div>
-      ${edges.length ? "" : `<div class="warning">Nessuna coppia abbastanza vicina: i testi restano separati. Se vuoi esplorare indizi più deboli usa il livello "Esplorativo".</div>`}
-      <div class="warning">${ctx.escapeHtml(payload.warning)}</div>
+      <div class="result-note">
+        Punti vicini indicano profili più simili sulle feature selezionate. Se il piano 2D spiega poca varianza, la mappa va letta come orientamento e non come prova.
+      </div>
+      ${renderWarnings(ctx, payload)}
     </section>
 
-    <section class="panel result-panel">
-      <div class="result-heading">
-        <div>
-          <p class="eyebrow">Lettura del risultato</p>
-          <h2>Accostamenti e termini che spiegano i cluster</h2>
-          <p>Le coppie marcate come da verificare sono quelle abbastanza vicine rispetto al livello scelto.</p>
-        </div>
+    <details class="panel result-panel pca-detail-panel">
+      <summary>Dettagli tecnici</summary>
+      <div class="pca-detail-grid">
+        <section>
+          <h3>Feature sugli assi</h3>
+          ${renderPcaLoadings(ctx, payload)}
+        </section>
+        <section>
+          <h3>Coppie più vicine</h3>
+          ${renderDistanceRows(ctx, payload, mode)}
+        </section>
       </div>
-      <div class="affinity-layout">
-        <div>
-          <div class="legal-table-wrap">
-            <table class="legal-table">
-              <thead><tr><th>Testo A</th><th>Testo B</th><th>Esito</th><th>Affinità</th><th>Distanza tecnica</th><th>Stato</th></tr></thead>
-              <tbody>${renderAffinityPairRows(ctx, payload, threshold)}</tbody>
-            </table>
-          </div>
-          <div class="affinity-feature-tags">
-            ${(payload.features || []).map((feature) => `<span>${ctx.escapeHtml(feature)}</span>`).join("")}
-          </div>
-        </div>
-        <div class="affinity-merges">
-          ${renderAffinityMergeCards(ctx, payload, threshold)}
-        </div>
-      </div>
-    </section>
+    </details>
   `;
 }
 
 export function init(ctx) {
-  async function runAffinityTool() {
-    const targetCount = ctx.state.documents.length;
-    if (targetCount < 3) {
-      ctx.toast("Servono almeno tre documenti.");
+  async function runPcaTool() {
+    const mode = selectedMode(ctx);
+    const minDocs = mode === "function" ? 2 : 3;
+    if (ctx.state.documents.length < minDocs) {
+      ctx.toast(`Servono almeno ${minDocs} documenti.`);
       return;
     }
     const button = ctx.$("#run-affinity-tool");
     button.disabled = true;
     button.textContent = "Calcolo in corso...";
-    ctx.$("#affinity-tool-results").innerHTML = `<div class="empty-state panel"><p>Calcolo del grafo di affinità...</p></div>`;
+    ctx.$("#affinity-tool-results").innerHTML = `<div class="empty-state panel"><p>${modeCopy(mode).empty}</p></div>`;
     try {
-      const payload = await ctx.api("/api/affinity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ids: [],
-          profile: selectedAffinityProfile(ctx),
-          parser: ctx.$("#affinity-parser-select").value,
-          max_features: selectedFeatureCount(ctx),
-          threshold: affinityThreshold(ctx),
-        }),
-      });
+      let payload;
+      if (mode === "function") {
+        payload = await ctx.api("/api/compare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ids: ctx.state.documents.map((document) => document.id),
+            feature_type: "function",
+            max_features: selectedFeatureCount(ctx, mode),
+            profile: selectedPcaProfile(ctx),
+          }),
+        });
+      } else {
+        payload = await ctx.api("/api/affinity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ids: [],
+            profile: selectedPcaProfile(ctx),
+            parser: ctx.$("#affinity-parser-select").value,
+            max_features: selectedFeatureCount(ctx, mode),
+          }),
+        });
+      }
       ctx.state.affinity = payload;
-      renderAffinityToolResults(ctx, payload);
+      renderPcaToolResults(ctx, payload, mode);
     } catch (error) {
       ctx.$("#affinity-tool-results").innerHTML = `<div class="warning">${ctx.escapeHtml(error.message)}</div>`;
     } finally {
       button.disabled = false;
-      button.textContent = "Calcola grafo";
+      button.textContent = "Calcola PCA";
     }
   }
 
-  ctx.$("#run-affinity-tool")?.addEventListener("click", runAffinityTool);
-  ctx.$("#affinity-threshold")?.addEventListener("change", () => {
-    if (ctx.state.affinity) renderAffinityToolResults(ctx, ctx.state.affinity);
-  });
+  ctx.$("#run-affinity-tool")?.addEventListener("click", runPcaTool);
 }

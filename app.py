@@ -895,10 +895,18 @@ def top_symmetric_eigen(
 
 
 def pca_projection(
-    table: list[list[float]], features: list[str], titles: list[str]
+    table: list[list[float]],
+    features: list[str],
+    titles: list[str],
+    component_count: int = 3,
 ) -> dict[str, Any]:
+    component_count = max(2, min(component_count, 3))
     if not table or not table[0]:
-        return {"points": [], "variance": [0, 0], "loadings": [[], []]}
+        return {
+            "points": [],
+            "variance": [0] * component_count,
+            "loadings": [[] for _ in range(component_count)],
+        }
     row_count = len(table)
     column_count = len(table[0])
     means = [
@@ -917,9 +925,9 @@ def pca_projection(
         ]
         for left in range(row_count)
     ]
-    eigenpairs = top_symmetric_eigen(gram, 2)
+    eigenpairs = top_symmetric_eigen(gram, component_count)
     total = sum(max(gram[index][index], 0) for index in range(row_count)) or 1
-    coordinates = [[0.0, 0.0] for _ in range(row_count)]
+    coordinates = [[0.0 for _ in range(component_count)] for _ in range(row_count)]
     loadings: list[list[dict[str, Any]]] = []
     variance = []
     for axis, (eigenvalue, vector) in enumerate(eigenpairs):
@@ -935,7 +943,7 @@ def pca_projection(
             axis_loadings.append({"feature": feature, "weight": round(weight, 4)})
         axis_loadings.sort(key=lambda item: abs(item["weight"]), reverse=True)
         loadings.append(axis_loadings[:10])
-    while len(variance) < 2:
+    while len(variance) < component_count:
         variance.append(0)
         loadings.append([])
     return {
@@ -944,6 +952,7 @@ def pca_projection(
                 "title": titles[index],
                 "x": round(coordinates[index][0], 5),
                 "y": round(coordinates[index][1], 5),
+                "z": round(coordinates[index][2], 5) if component_count > 2 else 0,
             }
             for index in range(row_count)
         ],
@@ -952,18 +961,36 @@ def pca_projection(
     }
 
 
-def compare_documents(payload: dict[str, Any]) -> dict[str, Any]:
-    ids = [int(value) for value in payload.get("ids", [])]
-    if len(ids) < 2:
-        raise ValueError("Selezionare almeno due documenti.")
-    rows = fetch_documents(ids)
-    if len(rows) != len(set(ids)):
-        raise ValueError("Uno o piu documenti non esistono.")
-    rows_by_id = {row["id"]: row for row in rows}
-    rows = [rows_by_id[document_id] for document_id in ids]
-    profile = payload.get("profile") or {"lower": True}
-    feature_type = str(payload.get("feature_type", "words"))
-    max_features = max(10, min(int(payload.get("max_features", 100)), 500))
+def document_feature_profiles(
+    rows: list[Any], features: list[str], table: list[list[float]], limit: int = 10
+) -> list[dict[str, Any]]:
+    profiles = []
+    for row_index, row in enumerate(rows):
+        ranked = sorted(
+            [
+                {"feature": feature, "frequency": round(table[row_index][index], 3)}
+                for index, feature in enumerate(features)
+                if table[row_index][index] > 0
+            ],
+            key=lambda item: item["frequency"],
+            reverse=True,
+        )
+        profiles.append(
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "features": ranked[:limit],
+            }
+        )
+    return profiles
+
+
+def stylometry_result(
+    rows: list[Any],
+    profile: dict[str, Any],
+    feature_type: str,
+    max_features: int,
+) -> dict[str, Any]:
     features, table, lengths = feature_table(rows, profile, feature_type, max_features)
     zscores = zscore_columns(table)
     delta_matrix = [[0.0 for _ in rows] for _ in rows]
@@ -1016,24 +1043,41 @@ def compare_documents(payload: dict[str, Any]) -> dict[str, Any]:
         warnings.append("I documenti appartengono a generi diversi.")
     if len(rows) < 3:
         warnings.append("La mappa riassuntiva con meno di tre documenti non e informativa.")
-    result = {
+    return {
         "documents": [
             {"id": row["id"], "title": row["title"], "units": lengths[index]}
             for index, row in enumerate(rows)
         ],
         "feature_type": feature_type,
         "max_features": len(features),
+        "features": features,
+        "document_profiles": document_feature_profiles(rows, features, table),
         "profile": profile,
         "delta_matrix": delta_matrix,
         "cosine_matrix": cosine_matrix,
         "explanations": explanations,
-        "pca": pca_projection(table, features, [row["title"] for row in rows]),
+        "pca": pca_projection(table, features, [row["title"] for row in rows], 3),
         "warnings": warnings,
         "interpretation": (
             "Distanze minori indicano testi piu simili nelle caratteristiche misurate. "
             "Non equivalgono a identita d'autore."
         ),
     }
+
+
+def compare_documents(payload: dict[str, Any]) -> dict[str, Any]:
+    ids = [int(value) for value in payload.get("ids", [])]
+    if len(ids) < 2:
+        raise ValueError("Selezionare almeno due documenti.")
+    rows = fetch_documents(ids)
+    if len(rows) != len(set(ids)):
+        raise ValueError("Uno o piu documenti non esistono.")
+    rows_by_id = {row["id"]: row for row in rows}
+    rows = [rows_by_id[document_id] for document_id in ids]
+    profile = payload.get("profile") or {"lower": True}
+    feature_type = str(payload.get("feature_type", "words"))
+    max_features = max(10, min(int(payload.get("max_features", 100)), 500))
+    result = stylometry_result(rows, profile, feature_type, max_features)
     with db_session() as db:
         db.execute(
             "INSERT INTO analysis_runs (kind, document_ids, parameters, created_at) VALUES (?, ?, ?, ?)",
@@ -1172,13 +1216,13 @@ def text_affinity_tree(payload: dict[str, Any], rows_override: list[Any] | None 
     ids = [int(value) for value in payload.get("ids", [])]
     if rows_override is None:
         if len(ids) < 3:
-            raise ValueError("Selezionare almeno tre documenti per costruire un albero di affinita.")
+            raise ValueError("Selezionare almeno tre documenti per calcolare una PCA lessicale.")
         rows = ordered_documents(ids)
     else:
         rows = rows_override
         ids = [int(row["id"]) for row in rows]
     if len(rows) < 3:
-        raise ValueError("Servono almeno tre documenti per un albero leggibile.")
+        raise ValueError("Servono almeno tre documenti per una PCA leggibile.")
 
     profile = payload.get("profile") or {"lower": True}
     parser_id = str(payload.get("parser", "forms"))
@@ -1254,14 +1298,16 @@ def text_affinity_tree(payload: dict[str, Any], rows_override: list[Any] | None 
         "merges": merges,
         "distance_matrix": matrix,
         "features": features[:20],
+        "document_profiles": document_feature_profiles(rows, features, table),
+        "pca": pca_projection(table, features, [row["title"] for row in rows], 3),
         "max_features": len(features),
         "requested_max_features": max_features,
         "shown_features": min(len(features), 20),
         "feature_mode": feature_mode,
         "parser": parser_id,
         "profile": profile,
-        "method": "Clustering gerarchico agglomerativo su frequenze normalizzate di forme o lemmi; distanza coseno.",
-        "warning": "L'albero segnala affinita lessicali/formulari da verificare; non dimostra da solo dipendenza diretta, autore comune o stemma.",
+        "method": "PCA su frequenze normalizzate di forme o lemmi; la distanza coseno resta come misura tecnica di controllo.",
+        "warning": "La mappa PCA mostra vicinanza lessicale/formulare da verificare; non dimostra da sola dipendenza diretta, autore comune o stemma.",
     }
 
 
@@ -1513,14 +1559,20 @@ def run_legal_terms_module(context: PipelineContext) -> dict[str, Any]:
 def run_stylometry_module(context: PipelineContext) -> dict[str, Any]:
     return {
         "status": "ok",
-        "result": compare_documents(
-            {
-                "ids": context.ids,
-                "feature_type": context.payload.get("feature_type", "words"),
-                "max_features": context.payload.get("max_features", 100),
-                "profile": context.profile,
-            }
+        "result": stylometry_result(
+            context.rows,
+            context.profile,
+            str(context.payload.get("feature_type", "words")),
+            max(10, min(int(context.payload.get("max_features", 100)), 500)),
         ),
+    }
+
+
+def run_function_words_module(context: PipelineContext) -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "message": "Analisi calcolata solo sulle parole grammaticali ricorrenti.",
+        "result": stylometry_result(context.rows, context.profile, "function", 120),
     }
 
 
@@ -1566,6 +1618,12 @@ def pipeline_runners(catalog: dict[str, Any] | None = None) -> dict[str, ModuleR
             min_documents=2,
             skipped_message="Servono almeno due documenti per il confronto stilometrico.",
         ),
+        "function_words": ModuleRunner(
+            "function_words",
+            run_function_words_module,
+            min_documents=2,
+            skipped_message="Servono almeno due documenti per l'analisi sulle function words.",
+        ),
         "parallel_passages": ModuleRunner(
             "parallel_passages",
             run_parallel_passages_module,
@@ -1576,7 +1634,7 @@ def pipeline_runners(catalog: dict[str, Any] | None = None) -> dict[str, ModuleR
             "textual_affinity",
             run_textual_affinity_module,
             min_documents=3,
-            skipped_message="Servono almeno tre documenti per costruire un albero di affinita.",
+            skipped_message="Servono almeno tre documenti per calcolare una PCA lessicale.",
         ),
         "voyant_export": ModuleRunner("voyant_export", run_voyant_export_module),
     }
@@ -1675,10 +1733,12 @@ def summarize_pipeline_modules(modules: dict[str, Any]) -> dict[str, Any]:
                 for term in result.get("terms", [])[:8]
             ]
             item["warnings"] = result.get("warnings", [])
-        elif module_id == "stylometry":
+        elif module_id in {"stylometry", "function_words"}:
             item["max_features"] = result.get("max_features", 0)
             item["feature_type"] = result.get("feature_type", "")
             item["warnings"] = result.get("warnings", [])
+            item["pca"] = result.get("pca", {})
+            item["document_profiles"] = result.get("document_profiles", [])[:8]
             item["pairs"] = [
                 {
                     "left_title": pair.get("left_title"),
@@ -1705,6 +1765,8 @@ def summarize_pipeline_modules(modules: dict[str, Any]) -> dict[str, Any]:
             item["warning"] = result.get("warning", "")
             item["merges"] = result.get("merges", [])[:8]
             item["features"] = result.get("features", [])[:12]
+            item["pca"] = result.get("pca", {})
+            item["document_profiles"] = result.get("document_profiles", [])[:8]
         elif module_id == "voyant_export":
             item["workspace_view"] = payload.get("workspace_view", "")
             item["download_url"] = payload.get("download_url", "")
@@ -1813,7 +1875,7 @@ def run_affinity_tool(payload: dict[str, Any]) -> dict[str, Any]:
     ids = [int(value) for value in payload.get("ids", [])]
     rows = ordered_documents(ids) if ids else fetch_documents()
     if len(rows) < 3:
-        raise ValueError("Servono almeno tre documenti per calcolare un grafo di affinita.")
+        raise ValueError("Servono almeno tre documenti per calcolare una PCA lessicale.")
 
     profile = payload.get("profile") or {"lower": True}
     parser_id = str(payload.get("parser", "forms"))
@@ -2226,18 +2288,28 @@ class TalonHandler(BaseHTTPRequestHandler):
                     payload.get("terms"),
                     parser_id,
                 )
-                result["evidence_texts"] = [
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "author": row["author"] or "attribuzione non indicata",
-                        "text": apply_profile(
-                            row["normalized_text"],
-                            payload.get("profile") or {"lower": True},
-                        ),
-                    }
-                    for row in rows
-                ]
+                document_layers = {int(document["id"]): document for document in result.get("documents", [])}
+                profile = payload.get("profile") or {"lower": True}
+                evidence_texts = []
+                for row in rows:
+                    layer = document_layers.get(int(row["id"]), {})
+                    token_source = layer.get("token_source", "forms")
+                    lemma_text = ""
+                    if str(token_source).startswith("lemmas_") and str(row["conllu"]).strip():
+                        lemma_text = " ".join(conllu_lemma_tokens(row["conllu"], profile))
+                    evidence_texts.append(
+                        {
+                            "id": row["id"],
+                            "title": row["title"],
+                            "author": row["author"] or "attribuzione non indicata",
+                            "token_source": token_source,
+                            "token_source_label": layer.get("token_source_label", "forme normalizzate"),
+                            "coverage": layer.get("coverage", ""),
+                            "text": apply_profile(row["normalized_text"], profile),
+                            "lemma_text": lemma_text,
+                        }
+                    )
+                result["evidence_texts"] = evidence_texts
                 with db_session() as db:
                     db.execute(
                         "INSERT INTO analysis_runs (kind, document_ids, parameters, created_at) VALUES (?, ?, ?, ?)",

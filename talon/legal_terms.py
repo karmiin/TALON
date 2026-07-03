@@ -245,11 +245,32 @@ def conllu_lemma_tokens(value: str, profile: dict[str, Any] | None = None) -> li
     return lemmas
 
 
+def conllu_form_lemma_pairs(value: str, profile: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    pairs: list[dict[str, str]] = []
+    for line in value.splitlines():
+        if not line or line.startswith("#"):
+            continue
+        columns = line.split("\t")
+        if len(columns) != 10 or "-" in columns[0] or "." in columns[0]:
+            continue
+        try:
+            int(columns[0])
+        except ValueError:
+            continue
+        form_tokens = tokenize(columns[1], profile)
+        lemma_tokens = tokenize(columns[2] if columns[2] != "_" else columns[1], profile)
+        if not form_tokens or not lemma_tokens:
+            continue
+        pairs.append({"form": form_tokens[0], "lemma": lemma_tokens[0]})
+    return pairs
+
+
 def token_layer(row: Any, profile: dict[str, Any], parser: str) -> dict[str, Any]:
     conllu = str(_row_value(row, "conllu", "")).strip()
     if parser != "forms" and conllu:
         lemmas = conllu_lemma_tokens(conllu, profile)
         if lemmas:
+            lemma_pairs = conllu_form_lemma_pairs(conllu, profile)
             source = "lemmas_conllu" if parser == "conllu_import" else f"lemmas_{parser}"
             label = (
                 "lemmi CoNLL-U importati"
@@ -261,12 +282,15 @@ def token_layer(row: Any, profile: dict[str, Any], parser: str) -> dict[str, Any
                 "source": source,
                 "description": label,
                 "coverage": "parziale" if len(lemmas) < len(tokenize(_row_value(row, "normalized_text", ""), profile)) else "completa",
+                "lemma_pairs": lemma_pairs,
             }
+    tokens = tokenize(_row_value(row, "normalized_text", ""), profile)
     return {
-        "tokens": tokenize(_row_value(row, "normalized_text", ""), profile),
+        "tokens": tokens,
         "source": "forms",
         "description": "forme normalizzate",
         "coverage": "testo completo",
+        "lemma_pairs": [{"form": token, "lemma": token} for token in tokens],
     }
 
 
@@ -338,6 +362,26 @@ def family_terms_for_layer(family: dict[str, Any], layer_source: str) -> list[st
     if layer_source.startswith("lemmas_") and family.get("lemmas"):
         return [str(item) for item in family["lemmas"]]
     return [str(item) for item in family["aliases"]]
+
+
+def highlight_terms_for_layer(
+    family: dict[str, Any],
+    layer: dict[str, Any],
+    profile: dict[str, Any] | None = None,
+) -> list[str]:
+    if not layer["source"].startswith("lemmas_") or not family.get("lemmas"):
+        return [str(item) for item in family["aliases"]]
+    target_lemmas = {
+        token
+        for lemma in family.get("lemmas", [])
+        for token in tokenize(str(lemma), profile)
+    }
+    forms = {
+        pair["form"]
+        for pair in layer.get("lemma_pairs", [])
+        if pair.get("lemma") in target_lemmas and pair.get("form")
+    }
+    return sorted(forms, key=lambda value: (-len(value), value))
 
 
 def count_sequences(tokens: list[str], sequences: list[tuple[str, ...]]) -> int:
@@ -431,11 +475,16 @@ def compare_legal_terms(
     for family in families:
         per_document = []
         total_count = 0
+        highlight_terms: set[str] = set()
+        counted_terms: set[str] = set()
         for row in rows:
             row_id = int(_row_value(row, "id", 0))
             layer = layers[row_id]
             tokens = layer["tokens"]
             terms_for_count = family_terms_for_layer(family, layer["source"])
+            terms_for_highlight = highlight_terms_for_layer(family, layer, profile)
+            highlight_terms.update(terms_for_highlight)
+            counted_terms.update(terms_for_count)
             sequences = alias_token_sequences(terms_for_count, profile)
             count = count_sequences(tokens, sequences)
             token_count = len(tokens)
@@ -453,9 +502,10 @@ def compare_legal_terms(
                     "per_1000": round(1000 * count / max(token_count, 1), 3),
                     "token_source": layer["source"],
                     "counted_terms": terms_for_count,
+                    "highlight_terms": terms_for_highlight,
                     "examples": contexts_for_aliases(
                         _row_value(row, "normalized_text", ""),
-                        family["aliases"],
+                        terms_for_highlight,
                         profile,
                     ),
                 }
@@ -466,6 +516,8 @@ def compare_legal_terms(
                 "label": family["label"],
                 "description": family["description"],
                 "aliases": family["aliases"],
+                "counted_terms": sorted(counted_terms),
+                "highlights": sorted(highlight_terms, key=lambda value: (-len(value), value)),
                 "total_count": total_count,
                 "documents": per_document,
             }

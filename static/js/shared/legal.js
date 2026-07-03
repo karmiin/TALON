@@ -4,10 +4,16 @@ export function legalToneClass(index) {
   return `legal-tone-${index % LEGAL_TONE_COUNT}`;
 }
 
-export function highlightLegalFamiliesInText(ctx, text, rows) {
+export function highlightLegalFamiliesInText(ctx, text, rows, options = {}) {
+  const preferredTerms = options.termsKey || "highlights";
   const entries = [];
   rows.forEach((row, index) => {
-    for (const alias of row.aliases || []) {
+    const terms = row[preferredTerms]?.length
+      ? row[preferredTerms]
+      : row.highlights?.length
+        ? row.highlights
+        : row.aliases || [];
+    for (const alias of terms) {
       const clean = String(alias || "").trim();
       if (clean) entries.push({ alias: clean, label: row.label, tone: legalToneClass(index) });
     }
@@ -62,9 +68,20 @@ export function renderLegalEvidenceTexts(ctx, payload, visibleRows) {
           <article class="legal-text-card">
             <header>
               <strong>${ctx.escapeHtml(document.title)}</strong>
-              <small>${ctx.escapeHtml(document.author)}</small>
+              <small>${ctx.escapeHtml(document.token_source_label || document.author)}${document.coverage ? ` · ${ctx.escapeHtml(document.coverage)}` : ""}</small>
             </header>
-            <pre>${highlightLegalFamiliesInText(ctx, document.text, activeRows)}</pre>
+            <div class="legal-text-views ${document.lemma_text ? "has-lemmas" : ""}">
+              <section>
+                <span>Testo originale</span>
+                <pre>${highlightLegalFamiliesInText(ctx, document.text, activeRows, { termsKey: "highlights" })}</pre>
+              </section>
+              ${document.lemma_text ? `
+                <section>
+                  <span>Lemmi usati nel conteggio</span>
+                  <pre>${highlightLegalFamiliesInText(ctx, document.lemma_text, activeRows, { termsKey: "counted_terms" })}</pre>
+                </section>
+              ` : ""}
+            </div>
           </article>
         `).join("")}
       </div>
@@ -88,7 +105,7 @@ export function renderLegalDocumentHits(ctx, term) {
 }
 
 export function renderLegalAliases(ctx, term) {
-  const aliases = (term.aliases || []).slice(0, 8);
+  const aliases = (term.counted_terms?.length ? term.counted_terms : term.aliases || []).slice(0, 8);
   if (!aliases.length) return `<span class="muted">Non dichiarate.</span>`;
   return aliases.map((alias) => `<code>${ctx.escapeHtml(alias)}</code>`).join(" ");
 }
@@ -102,7 +119,7 @@ export function renderLegalTermTable(ctx, terms) {
             <th>Famiglia</th>
             <th>Totale</th>
             <th>Distribuzione nei testi</th>
-            <th>Forme cercate</th>
+            <th>Termini conteggiati</th>
           </tr>
         </thead>
         <tbody>

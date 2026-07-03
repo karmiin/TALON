@@ -2,18 +2,24 @@
   <header class="tool-page-header">
     <div>
       <p class="eyebrow">Tool esplorativo</p>
-      <h1>Affinità testuale</h1>
-      <p>Calcola un grafo a soglia tra tre o più testi. Un legame indica vicinanza lessicale/formulare da verificare nel testo.</p>
+      <h1>PCA lessicale</h1>
+      <p>Colloca tutti i testi importati su un piano PCA usando parole o lemmi contenutistici. Le function words sono escluse.</p>
     </div>
   </header>
   <div class="tool-workspace">
     <aside class="panel tool-controls">
       <h2>Archivio</h2>
-      <p class="field-help">Il grafo viene calcolato su tutti i testi importati, senza selezione manuale.</p>
+      <p class="field-help">La mappa viene calcolata su tutti i testi importati, senza selezione manuale.</p>
       <h2>Calcolo</h2>
+      <fieldset class="normalization-box pca-mode-box">
+        <legend>Profilo</legend>
+        <label><input name="pca-mode" type="radio" value="lexical" checked> Lessico / lemmi</label>
+        <label><input name="pca-mode" type="radio" value="function"> Function words</label>
+      </fieldset>
       <label class="field">
         <span>Parser / lemmatizzatore</span>
         <select id="affinity-parser-select"></select>
+        <small class="field-help">Usato solo nel profilo lessico/lemmi.</small>
       </label>
       <label class="field">
         <span>Ampiezza del profilo</span>
@@ -23,7 +29,7 @@
           <option value="120">Bilanciato</option>
           <option value="220">Ampio</option>
         </select>
-        <small class="field-help">Numero di parole/lemmi usati nel vettore comune. Automatica sceglie una soglia unica in base alla lunghezza mediana dei testi.</small>
+        <small class="field-help">Numero di feature usate nel vettore comune. Automatica vale solo per il profilo lessico/lemmi.</small>
       </label>
       <fieldset class="normalization-box">
         <legend>Pulizia prima del confronto</legend>
@@ -31,22 +37,13 @@
         <label><input id="affinity-ji" type="checkbox"> j -> i</label>
         <label><input id="affinity-vu" type="checkbox"> v -> u</label>
       </fieldset>
-      <label class="field">
-        <span>Livello di evidenza</span>
-        <select id="affinity-threshold">
-          <option value="0.35" selected>Solo affinità forti</option>
-          <option value="0.50">Affinità probabili</option>
-          <option value="0.65">Esplorativo</option>
-        </select>
-        <small class="field-help">Più prudente = mostra solo legami lessicali/formulari molto vicini. I nodi senza legame restano separati.</small>
-      </label>
-      <button class="primary-button full-width" id="run-affinity-tool">Calcola grafo</button>
+      <button class="primary-button full-width" id="run-affinity-tool">Calcola PCA</button>
     </aside>
     <div class="tool-results" id="affinity-tool-results">
       <div class="empty-state panel">
         <span class="empty-glyph">F</span>
-        <h2>Calcola le affinità</h2>
-        <p>Usa tutti i testi importati e mostra solo i legami abbastanza forti da meritare verifica filologica.</p>
+        <h2>Calcola la PCA</h2>
+        <p>Scegli lessico/lemmi oppure function words e calcola il piano PC1/PC2.</p>
       </div>
     </div>
   </div>

@@ -189,8 +189,8 @@ def _legal_run_report(summary: dict[str, Any]) -> str:
     """
 
 
-def _stylometry_report(summary: dict[str, Any]) -> str:
-    item = summary.get("stylometry")
+def _stylometry_section(summary: dict[str, Any], module_id: str, title: str) -> str:
+    item = summary.get(module_id)
     if not item or not item.get("pairs"):
         return ""
     rows = []
@@ -218,7 +218,7 @@ def _stylometry_report(summary: dict[str, Any]) -> str:
     profile_label = profile_labels.get(item.get("feature_type"), item.get("feature_type"))
     return f"""
     <section>
-      <h2>Stilometria</h2>
+      <h2>{_escape(title)}</h2>
       <p>Profilo usato: {_escape(profile_label)}.</p>
       {warnings}
       <table>
@@ -227,6 +227,13 @@ def _stylometry_report(summary: dict[str, Any]) -> str:
       </table>
     </section>
     """
+
+
+def _stylometry_report(summary: dict[str, Any]) -> str:
+    return (
+        _stylometry_section(summary, "stylometry", "Stilometria")
+        + _stylometry_section(summary, "function_words", "Function words")
+    )
 
 
 def _parallel_report(summary: dict[str, Any]) -> str:
@@ -259,7 +266,7 @@ def _parallel_report(summary: dict[str, Any]) -> str:
 
 def _affinity_report(summary: dict[str, Any]) -> str:
     item = summary.get("textual_affinity")
-    if not item or not item.get("merges"):
+    if not item or (not item.get("merges") and not item.get("pca")):
         return ""
     rows = []
     for merge in item.get("merges", []):
@@ -276,7 +283,7 @@ def _affinity_report(summary: dict[str, Any]) -> str:
     warning = f"<p class='notice'>{_escape(item.get('warning'))}</p>" if item.get("warning") else ""
     return f"""
     <section>
-      <h2>Albero di affinità testuale</h2>
+      <h2>PCA lessicale</h2>
       {warning}
       <p>{_escape(item.get('method'))}</p>
       <table>
@@ -306,7 +313,7 @@ def _generic_module_report(
     module_catalog: dict[str, Any],
     module_order: list[str],
 ) -> str:
-    builtin = {"lexicon", "legal_terms", "stylometry", "parallel_passages", "textual_affinity", "voyant_export"}
+    builtin = {"lexicon", "legal_terms", "stylometry", "function_words", "parallel_passages", "textual_affinity", "voyant_export"}
     rows = []
     for module_id in module_order:
         if module_id in builtin:
@@ -436,32 +443,33 @@ def _run_report_pdf_items(
             _append_wrapped_pdf_line(items, "small", f"Nota: {warning}")
         items.append(("blank", ""))
 
-    stylometry = summary.get("stylometry")
-    if stylometry and stylometry.get("pairs"):
-        items.append(("section", "Stilometria"))
-        profile_labels = {
-            "words": "parole frequenti",
-            "function": "parole grammaticali",
-            "char3": "sequenze grafiche di tre caratteri",
-        }
-        _append_wrapped_pdf_line(
-            items,
-            "body",
-            f"Profilo usato: {profile_labels.get(stylometry.get('feature_type'), stylometry.get('feature_type'))}.",
-        )
-        for pair in stylometry.get("pairs", [])[:limit]:
-            contributors = ", ".join(
-                str(contributor.get("feature", ""))
-                for contributor in pair.get("contributors", [])[:5]
-            )
+    profile_labels = {
+        "words": "parole frequenti",
+        "function": "parole grammaticali",
+        "char3": "sequenze grafiche di tre caratteri",
+    }
+    for stylometry_id, title in (("stylometry", "Stilometria"), ("function_words", "Function words")):
+        stylometry = summary.get(stylometry_id)
+        if stylometry and stylometry.get("pairs"):
+            items.append(("section", title))
             _append_wrapped_pdf_line(
                 items,
                 "body",
-                f"- {pair.get('left_title')} / {pair.get('right_title')}: "
-                f"Delta {pair.get('delta')}, coseno {pair.get('cosine')}. "
-                f"Contributi: {contributors}",
+                f"Profilo usato: {profile_labels.get(stylometry.get('feature_type'), stylometry.get('feature_type'))}.",
             )
-        items.append(("blank", ""))
+            for pair in stylometry.get("pairs", [])[:limit]:
+                contributors = ", ".join(
+                    str(contributor.get("feature", ""))
+                    for contributor in pair.get("contributors", [])[:5]
+                )
+                _append_wrapped_pdf_line(
+                    items,
+                    "body",
+                    f"- {pair.get('left_title')} / {pair.get('right_title')}: "
+                    f"Delta {pair.get('delta')}, coseno {pair.get('cosine')}. "
+                    f"Contributi: {contributors}",
+                )
+            items.append(("blank", ""))
 
     parallels = summary.get("parallel_passages")
     if parallels and parallels.get("pairs"):
@@ -478,9 +486,9 @@ def _run_report_pdf_items(
             _append_wrapped_pdf_line(items, "small", f"Nota: {parallels.get('warning')}")
 
     affinity = summary.get("textual_affinity")
-    if affinity and affinity.get("merges"):
+    if affinity and (affinity.get("merges") or affinity.get("pca")):
         items.append(("blank", ""))
-        items.append(("section", "Albero di affinita testuale"))
+        items.append(("section", "PCA lessicale"))
         if affinity.get("warning"):
             _append_wrapped_pdf_line(items, "small", f"Nota: {affinity.get('warning')}")
         for merge in affinity.get("merges", [])[:limit]:
@@ -491,7 +499,7 @@ def _run_report_pdf_items(
                 f"distanza {merge.get('distance')}; termini condivisi: {', '.join(merge.get('shared_terms', [])[:8])}",
             )
 
-    builtin = {"lexicon", "legal_terms", "stylometry", "parallel_passages", "textual_affinity", "voyant_export"}
+    builtin = {"lexicon", "legal_terms", "stylometry", "function_words", "parallel_passages", "textual_affinity", "voyant_export"}
     external_rows = [
         (module_id, summary.get(module_id, {}))
         for module_id in module_order

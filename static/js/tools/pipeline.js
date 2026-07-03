@@ -1,4 +1,11 @@
-import { affinityPairs, renderAffinityGraph } from "../shared/affinity.js";
+import {
+  affinityPairs,
+  renderDocumentFeatureProfiles,
+  renderPcaDocumentKey,
+  renderPcaLoadings,
+  renderPcaPlot,
+  renderPcaVariance,
+} from "../shared/affinity.js";
 import { renderLegalTermTable } from "../shared/legal.js";
 
 let ctxRef;
@@ -69,7 +76,7 @@ function renderModuleControls() {
 
   const reportModules = [...state.modules.analyses, ...state.modules.integrations]
     .filter((module) => module.runnable)
-    .filter((module) => module.id !== "voyant_export");
+    .filter((module) => !["voyant_export", "function_words"].includes(module.id));
   moduleList.innerHTML = reportModules.map((module) => `
     <label class="module-choice">
       <input type="checkbox" value="${escapeHtml(module.id)}" data-pipeline-module checked>
@@ -415,8 +422,9 @@ function modulePurpose(moduleId) {
     lexicon: "Descrive il lessico del testo e permette di controllare parole ricorrenti e contesti.",
     legal_terms: "Misura famiglie terminologiche giuridiche per confrontare documenti e autori.",
     stylometry: "Confronta profili di frequenza tra testi; utile per somiglianze e differenze stilistiche.",
+    function_words: "Ripete il confronto usando solo parole grammaticali, meno legate al tema.",
     parallel_passages: "Cerca passi lessicalmente simili e mostra le parole condivise da verificare.",
-    textual_affinity: "Raggruppa molti testi in un albero di affinità e mostra le parole/formule condivise.",
+    textual_affinity: "Colloca molti testi in una PCA lessicale e mostra le feature che spiegano le separazioni.",
     voyant_export: "Apre i testi in Voyant come ambiente esterno di esplorazione.",
   };
   return purposes[moduleId] || "Modulo aggiunto dal catalogo; il report registra output e parametri.";
@@ -452,6 +460,7 @@ function renderPipelineResults(payload) {
   const legal = payload.modules.legal_terms?.result;
   const lexicon = payload.modules.lexicon?.result;
   const stylometry = payload.modules.stylometry?.result;
+  const functionWords = payload.modules.function_words?.result;
   const parallels = payload.modules.parallel_passages?.result;
   const affinity = payload.modules.textual_affinity?.result;
 
@@ -474,6 +483,7 @@ function renderPipelineResults(payload) {
     ${lexicon ? renderPipelineLexiconSummary(lexicon) : ""}
     ${legal ? renderPipelineLegalSummary(legal) : ""}
     ${stylometry ? renderPipelineStylometrySummary(stylometry) : ""}
+    ${functionWords ? renderPipelineFunctionWordsSummary(functionWords) : ""}
     ${affinity ? renderPipelineAffinitySummary(affinity) : ""}
     ${parallels ? renderPipelineParallelSummary(parallels) : ""}
   `;
@@ -543,8 +553,27 @@ function renderPipelineStylometrySummary(payload) {
         </div>
         <span class="badge">${payload.max_features} caratteristiche</span>
       </div>
-      <div class="warning-list">${payload.warnings.map((warning) => `<div class="warning">${escapeHtml(warning)}</div>`).join("")}</div>
+      <div class="warning-list">${(payload.warnings || []).map((warning) => `<div class="warning">${escapeHtml(warning)}</div>`).join("")}</div>
       ${renderStylometryDistanceTable(payload, 8)}
+    </section>
+  `;
+}
+
+function renderPipelineFunctionWordsSummary(payload) {
+  const { escapeHtml } = ctxRef;
+  return `
+    <section class="panel result-panel">
+      <div class="result-heading">
+        <div>
+          <p class="eyebrow">Function words</p>
+          <h2>Controllo stilometrico su parole grammaticali</h2>
+          <p>La sezione usa solo congiunzioni, preposizioni, pronomi e particelle: è meno influenzata dal contenuto specifico dei testi.</p>
+        </div>
+        <span class="badge">${payload.max_features} feature</span>
+      </div>
+      <div class="warning-list">${(payload.warnings || []).map((warning) => `<div class="warning">${escapeHtml(warning)}</div>`).join("")}</div>
+      ${renderStylometryDistanceTable(payload, 8)}
+      <div style="margin-top:12px">${renderPcaLoadings(ctxRef, payload)}</div>
     </section>
   `;
 }
@@ -576,34 +605,39 @@ function renderPipelineParallelSummary(payload) {
 
 function renderPipelineAffinitySummary(payload) {
   const { escapeHtml, formatNumber } = ctxRef;
-  const threshold = 0.5;
-  const { edges } = affinityPairs(payload, threshold);
+  const { pairs } = affinityPairs(payload, 1);
   return `
     <section class="panel result-panel">
       <div class="result-heading">
         <div>
-          <p class="eyebrow">Affinità testuale</p>
-          <h2>Grafo delle relazioni possibili</h2>
-          <p>Nodi = testi. Archi = affinità lessicale/formulare da verificare sul testo.</p>
+          <p class="eyebrow">PCA lessicale</p>
+          <h2>Mappa dei testi</h2>
+          <p>Testi vicini sulla mappa hanno composizioni lessicali/formulari più simili; gli assi indicano le feature che guidano la separazione.</p>
         </div>
-        <span class="badge">${payload.documents.length} testi · ${edges.length} legami</span>
+        <span class="badge">${payload.documents.length} testi · ${payload.max_features} feature</span>
       </div>
       <div class="warning">${escapeHtml(payload.warning)}</div>
-      <div class="affinity-layout">
+      ${renderPcaVariance(ctxRef, payload)}
+      <div class="affinity-dashboard">
         <div class="affinity-graph-shell">
-          ${renderAffinityGraph(ctxRef, payload, threshold)}
+          ${renderPcaPlot(ctxRef, payload, { label: "PCA lessicale" })}
         </div>
-        <div class="affinity-merges">
-          <h3>Legami da controllare</h3>
-          ${edges.length ? edges.slice(0, 6).map((edge) => `
+        <div>
+          ${renderPcaDocumentKey(ctxRef, payload)}
+          <div class="affinity-merges" style="margin-top:10px">
+          <h3>Coppie più vicine</h3>
+          ${pairs.length ? pairs.slice(0, 6).map((pair) => `
             <article>
-              <strong>${escapeHtml(edge.leftTitle)}</strong>
-              <span>con ${escapeHtml(edge.rightTitle)}</span>
-              <small>Affinità ${formatNumber(edge.affinity * 100, 1)}% · distanza tecnica ${formatNumber(edge.distance, 3)}</small>
+              <strong>${escapeHtml(pair.leftTitle)}</strong>
+              <span>con ${escapeHtml(pair.rightTitle)}</span>
+              <small>Similarità ${formatNumber(pair.affinity * 100, 1)}% · distanza coseno ${formatNumber(pair.distance, 3)}</small>
             </article>
-          `).join("") : `<p class="muted">Nessun legame abbastanza forte con soglia prudente.</p>`}
+          `).join("") : `<p class="muted">Nessuna coppia disponibile.</p>`}
+          </div>
         </div>
       </div>
+      <div style="margin-top:12px">${renderPcaLoadings(ctxRef, payload)}</div>
+      <div style="margin-top:12px">${renderDocumentFeatureProfiles(ctxRef, payload)}</div>
     </section>
   `;
 }
