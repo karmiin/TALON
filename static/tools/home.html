@@ -1,40 +1,25 @@
 <section class="app-view is-active" id="view-home">
   <section class="home-command">
-    <div class="home-title">
-      <span class="brand-mark compact">TA</span>
-      <div>
-        <p class="eyebrow">TALON</p>
-        <h1>Dashboard</h1>
-      </div>
+    <div>
+      <p class="eyebrow">TALON</p>
+      <h1>Workspace di ricerca</h1>
+      <p class="home-summary">Dalla trascrizione alle evidenze: organizza i testi, avvia un'analisi e raccogli i risultati in un report verificabile.</p>
     </div>
     <div class="home-actions">
-      <button class="primary-button" data-view="pipeline">Nuova pipeline</button>
-      <button class="secondary-button" data-view="reports">Report</button>
-    </div>
-  </section>
-
-  <section class="home-overview">
-    <div class="suite-kpis" id="home-kpis" aria-label="Stato workspace">
-      <article><strong>-</strong><span>Documenti</span></article>
-      <article><strong>-</strong><span>Moduli</span></article>
-      <article><strong>-</strong><span>Runtime</span></article>
-      <article><strong>-</strong><span>PDF</span></article>
+      <button class="secondary-button" data-view="library">Apri archivio</button>
+      <button class="primary-button" data-view="pipeline">Crea report</button>
     </div>
   </section>
 
   <section class="home-grid">
-    <div>
-      <div class="section-title">
-        <h2>Strumenti</h2>
-        <span>Apri un modulo operativo</span>
+    <div class="section-title">
+      <div>
+        <h2>Attività</h2>
+        <p>Scegli cosa devi fare sul materiale di lavoro.</p>
       </div>
-      <section class="tool-launcher" id="tool-launcher" aria-label="Strumenti disponibili">
-        <div class="tool-card">
-          <span class="tool-icon">...</span>
-          <strong>Caricamento strumenti</strong>
-          <small>Lettura catalogo moduli.</small>
-        </div>
-      </section>
     </div>
+    <section class="tool-launcher" id="tool-launcher" aria-label="Strumenti disponibili">
+      <div class="tool-loading">Caricamento strumenti...</div>
+    </section>
   </section>
 </section>

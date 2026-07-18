@@ -1,9 +1,9 @@
 <section class="app-view" id="view-affinity">
   <header class="tool-page-header">
     <div>
-      <p class="eyebrow">Tool esplorativo</p>
-      <h1>PCA lessicale</h1>
-      <p>Colloca tutti i testi importati su un piano PCA usando parole o lemmi contenutistici. Le function words sono escluse.</p>
+      <p class="eyebrow">Analisi esplorativa</p>
+      <h1>PCA dei testi</h1>
+      <p>Confronta la composizione dei testi su un piano 2D. Puoi usare il lessico oppure le parole grammaticali come controllo stilometrico.</p>
     </div>
   </header>
   <div class="tool-workspace">
@@ -14,7 +14,7 @@
       <fieldset class="normalization-box pca-mode-box">
         <legend>Profilo</legend>
         <label><input name="pca-mode" type="radio" value="lexical" checked> Lessico / lemmi</label>
-        <label><input name="pca-mode" type="radio" value="function"> Function words</label>
+        <label><input name="pca-mode" type="radio" value="function"> Parole grammaticali</label>
       </fieldset>
       <label class="field">
         <span>Parser / lemmatizzatore</span>
@@ -22,14 +22,14 @@
         <small class="field-help">Usato solo nel profilo lessico/lemmi.</small>
       </label>
       <label class="field">
-        <span>Ampiezza del profilo</span>
+        <span>Numero di caratteristiche</span>
         <select id="affinity-feature-count">
-          <option value="auto" selected>Automatica</option>
-          <option value="80">Sintetico</option>
-          <option value="120">Bilanciato</option>
-          <option value="220">Ampio</option>
+          <option value="auto" selected>Automatico (consigliato)</option>
+          <option value="80">80 caratteristiche</option>
+          <option value="120">120 caratteristiche</option>
+          <option value="220">220 caratteristiche</option>
         </select>
-        <small class="field-help">Numero di feature usate nel vettore comune. Automatica vale solo per il profilo lessico/lemmi.</small>
+        <small class="field-help">Dimensione del vettore comune usato per confrontare i testi. Il valore automatico si adatta all'archivio.</small>
       </label>
       <fieldset class="normalization-box">
         <legend>Pulizia prima del confronto</legend>

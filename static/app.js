@@ -2,7 +2,6 @@ const state = {
   documents: [],
   activeDocument: null,
   annotations: [],
-  analysis: null,
   compare: null,
   modules: null,
   parserStatus: [],
@@ -36,6 +35,7 @@ const VIEW_LABELS = {
   editor: "Editor",
   pipeline: "Pipeline",
   reports: "Report",
+  linguistics: "Lessico e grammatica",
   affinity: "PCA",
   legal: "Termini giuridici",
   diff: "Diff testi",
@@ -150,20 +150,15 @@ function setView(name) {
   $$(".app-view").forEach((view) => view.classList.toggle("is-active", view.id === `view-${name}`));
   $$(".nav-button").forEach((button) => button.classList.toggle("is-active", button.dataset.view === name));
   $$(".rail-button").forEach((button) => button.classList.toggle("is-active", button.dataset.view === name));
+  document.body.classList.remove("nav-open");
   renderTopbar();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 function renderTopbar() {
   const current = document.body.dataset.currentView || "home";
   const title = $("#current-view-title");
-  const status = $("#workspace-status");
   if (title) title.textContent = VIEW_LABELS[current] || current;
-  if (status) {
-    const docs = state.documents?.length ?? 0;
-    const tools = state.modules?.tools?.length ?? state.modules?.runtime_modules?.length ?? 0;
-    status.textContent = `${docs} testi · ${tools} tool`;
-  }
 }
 
 function hasView(name) {
@@ -187,14 +182,12 @@ function bindToolControl(control) {
 async function loadDocuments() {
   const payload = await api("/api/documents");
   state.documents = payload.documents;
-  renderHomeKpis();
   renderTopbar();
   notifyData("documents");
 }
 
 async function loadModules() {
   state.modules = await api("/api/modules");
-  renderHomeKpis();
   renderToolLauncher();
   renderTopbar();
   notifyData("modules");
@@ -215,7 +208,6 @@ async function loadImporterStatus() {
 
 async function loadAudit() {
   state.audit = await api("/api/audit");
-  renderHomeKpis();
   notifyData("audit");
 }
 
@@ -239,22 +231,21 @@ function renderImporterStatus() {
   container.classList.toggle("is-warning", !pdf.available);
 }
 
-function renderHomeKpis() {
-  const container = $("#home-kpis");
-  if (!container) return;
-  const pdfOk = state.audit?.pdf_import?.available;
-  const values = [
-    [state.documents?.length ?? "-", "Documenti"],
-    [state.modules?.modules?.length ?? state.audit?.modules ?? "-", "Moduli"],
-    [state.modules?.runtime_modules?.length ?? state.audit?.runtime_modules ?? "-", "Runtime"],
-    [pdfOk === undefined ? "-" : pdfOk ? "OK" : "NO", "PDF"],
-  ];
-  container.innerHTML = values.map(([value, label]) => `
-    <article>
-      <strong>${escapeHtml(value)}</strong>
-      <span>${escapeHtml(label)}</span>
-    </article>
-  `).join("");
+const TOOL_ICONS = {
+  library: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h6l2 2h10v10.5H3z"/><path d="M3 6.5V5h7l2 2h9v1.5"/></svg>',
+  editor: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h4M8 17l1-4 7-7 2 2-7 7z"/></svg>',
+  pipeline: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 6h8M7 8l4 8M17 8l-4 8"/></svg>',
+  reports: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h4M8 17v-3M12 17v-6M16 17v-8"/></svg>',
+  affinity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v17h17"/><circle cx="8" cy="15" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="17" cy="12" r="1.5"/><circle cx="19" cy="6" r="1.5"/></svg>',
+  legal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M6 6h12M7 6l-4 7h8zM17 6l-4 7h8zM8 21h8"/></svg>',
+  diff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v16H4zM14 4h6v16h-6zM7 8h1M7 12h1M16 9h1M16 14h1"/></svg>',
+  voyant: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M9 20V4M14 20v-7M19 20V7"/></svg>',
+  collatinus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1 9 1.5v13c-3-2.5-6-3-9-1.5zM21 5.5c-3-1.5-6-1-9 1.5v13c3-2.5 6-3 9-1.5z"/></svg>',
+  linguistics: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/><path d="M6.5 8.5h2M6.5 12h2M15.5 8.5h2M15.5 12h2M15.5 15.5h2"/></svg>',
+};
+
+function toolIcon(view) {
+  return TOOL_ICONS[view] || '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>';
 }
 
 function renderToolLauncher() {
@@ -271,30 +262,59 @@ function renderToolLauncher() {
     `;
     return;
   }
-  container.innerHTML = tools.map((tool) => {
+  const sectionForView = {
+    library: "sources",
+    editor: "sources",
+    diff: "sources",
+    linguistics: "analysis",
+    affinity: "analysis",
+    legal: "analysis",
+    voyant: "analysis",
+    collatinus: "analysis",
+    pipeline: "output",
+    reports: "output",
+  };
+  const sections = [
+    { id: "sources", label: "Prepara le fonti", description: "Importa, correggi, annota e confronta le trascrizioni." },
+    { id: "analysis", label: "Analizza", description: "Esplora lessico, stile, morfologia e terminologia." },
+    { id: "output", label: "Documenta", description: "Configura le analisi e conserva risultati riproducibili." },
+    { id: "other", label: "Altri strumenti", description: "Moduli aggiunti al workspace." },
+  ];
+  const grouped = new Map(sections.map((section) => [section.id, []]));
+  tools.forEach((tool) => {
     const ui = tool.ui || {};
-    const view = ui.view || "";
-    const icon = ui.icon || String(tool.order || "").padStart(2, "0");
-    const primary = ui.primary ? " primary-tool" : "";
-    const outputs = (tool.outputs || []).slice(0, 2).join(" · ");
-    const statusLabel = tool.status === "active" ? "Attivo" : tool.status;
-    const actionAttribute = hasView(view)
-      ? `data-view="${escapeHtml(view)}"`
-      : `data-tool-id="${escapeHtml(tool.id)}"`;
-    return `
-      <button class="tool-card${primary}" ${actionAttribute}>
-        <span class="tool-icon">${escapeHtml(icon)}</span>
-        <span class="tool-copy">
-          <strong>${escapeHtml(tool.label)}</strong>
-          <small>${escapeHtml(tool.description)}</small>
-        </span>
-        <span class="tool-output">${escapeHtml(outputs || tool.category)}</span>
-        <span class="tool-meta">
-          <b>${escapeHtml(statusLabel)}</b>
-        </span>
-      </button>
-    `;
-  }).join("");
+    const section = ui.section || sectionForView[ui.view] || "other";
+    (grouped.get(section) || grouped.get("other")).push(tool);
+  });
+  container.innerHTML = sections
+    .filter((section) => grouped.get(section.id).length)
+    .map((section) => `
+      <section class="tool-group">
+        <header>
+          <h3>${escapeHtml(section.label)}</h3>
+          <p>${escapeHtml(section.description)}</p>
+        </header>
+        <div class="tool-group-list">
+          ${grouped.get(section.id).map((tool) => {
+            const ui = tool.ui || {};
+            const view = ui.view || "";
+            const actionAttribute = hasView(view)
+              ? `data-view="${escapeHtml(view)}"`
+              : `data-tool-id="${escapeHtml(tool.id)}"`;
+            return `
+              <button class="tool-card" type="button" ${actionAttribute}>
+                <span class="tool-icon">${toolIcon(view)}</span>
+                <span class="tool-copy">
+                  <strong>${escapeHtml(tool.label)}</strong>
+                  <small>${escapeHtml(tool.description)}</small>
+                </span>
+                <span class="tool-open">Apri <span aria-hidden="true">&#8594;</span></span>
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    `).join("");
   $$("[data-view]", container).forEach(bindViewControl);
   $$("[data-tool-id]", container).forEach(bindToolControl);
 }
@@ -493,6 +513,18 @@ async function submitImport(event) {
 
 function bindGlobalEvents() {
   $$("[data-view]").forEach(bindViewControl);
+  $("#nav-toggle")?.addEventListener("click", () => {
+    const mobile = window.matchMedia("(max-width: 860px)").matches;
+    if (mobile) {
+      document.body.classList.toggle("nav-open");
+    } else {
+      document.body.classList.toggle("nav-collapsed");
+    }
+    const expanded = mobile
+      ? document.body.classList.contains("nav-open")
+      : !document.body.classList.contains("nav-collapsed");
+    $("#nav-toggle").setAttribute("aria-expanded", String(expanded));
+  });
   $("#open-import").addEventListener("click", () => $("#import-dialog").showModal());
   $$("[data-close-dialog]").forEach((button) => button.addEventListener("click", () => $("#import-dialog").close()));
   $$("[data-import-mode]").forEach((button) => button.addEventListener("click", () => setImportMode(button.dataset.importMode)));
@@ -504,12 +536,16 @@ function bindGlobalEvents() {
 
 async function init() {
   try {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, behavior: "auto" });
     await loadDynamicTools();
     bindGlobalEvents();
     await Promise.all([loadModules(), loadParserStatus(), loadImporterStatus(), loadDocuments(), loadAudit(), loadRuns()]);
   } catch (error) {
-    $("#document-list").innerHTML = `<div class="warning">${escapeHtml(error.message)}</div>`;
-    toast("Impossibile collegarsi al server locale.");
+    console.error("TALON initialization failed", error);
+    const documentList = $("#document-list");
+    if (documentList) documentList.innerHTML = `<div class="warning">${escapeHtml(error.message)}</div>`;
+    toast(`Errore di inizializzazione: ${error.message}`);
   }
 }
 

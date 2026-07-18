@@ -1,28 +1,39 @@
 <section class="app-view" id="view-diff">
   <header class="tool-page-header">
     <div>
-      <p class="eyebrow">Collazione visuale</p>
-      <h1>Differenze tra due testi</h1>
-      <p>Seleziona due trascrizioni e visualizza sostituzioni, omissioni e aggiunte.</p>
+      <p class="eyebrow">Confronto testuale</p>
+      <h1>Confronta due trascrizioni</h1>
+      <p>Individua varianti, omissioni e aggiunte senza perdere il contesto.</p>
     </div>
   </header>
-  <div class="tool-workspace">
-    <aside class="panel tool-controls">
-      <h2>Testi</h2>
-      <div id="diff-document-list" class="check-list"></div>
-      <fieldset class="normalization-box">
-        <legend>Pulizia prima del confronto</legend>
-        <label><input id="diff-lower" type="checkbox" checked> Minuscole</label>
-        <label><input id="diff-ji" type="checkbox"> j -> i</label>
-        <label><input id="diff-vu" type="checkbox"> v -> u</label>
-      </fieldset>
-      <button class="primary-button full-width" id="run-diff-tool">Confronta differenze</button>
-    </aside>
-    <div class="tool-results" id="diff-tool-results">
-      <div class="empty-state panel">
-        <span class="empty-glyph">D</span>
-        <h2>Seleziona due testi</h2>
-        <p>Le differenze verranno evidenziate in due colonne affiancate.</p>
+  <section class="panel diff-setup" aria-label="Impostazioni del confronto">
+    <div class="diff-document-pair">
+      <div id="diff-left-picker"></div>
+      <button class="diff-swap-button" id="diff-swap-documents" type="button" aria-label="Scambia i documenti" title="Scambia i documenti">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 3-3m-3 3 3 3M7 7h10M17 17l-3-3m3 3-3 3m3-3H7"/></svg>
+      </button>
+      <div id="diff-right-picker"></div>
+    </div>
+    <div class="diff-command-row">
+      <details class="diff-options">
+        <summary>Normalizzazione del testo</summary>
+        <fieldset>
+          <legend class="sr-only">Normalizzazione prima del confronto</legend>
+          <label><input id="diff-lower" type="checkbox" checked> Ignora maiuscole</label>
+          <label><input id="diff-ji" type="checkbox"> Considera j come i</label>
+          <label><input id="diff-vu" type="checkbox"> Considera v come u</label>
+        </fieldset>
+      </details>
+      <button class="primary-button" id="run-diff-tool">Confronta testi</button>
+    </div>
+  </section>
+  <div class="tool-results diff-results" id="diff-tool-results">
+    <div class="empty-state panel diff-empty-state">
+      <h2>Il confronto apparirà qui</h2>
+      <p>Scegli due documenti diversi e avvia l’analisi.</p>
+      <div class="diff-empty-preview" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
       </div>
     </div>
   </div>

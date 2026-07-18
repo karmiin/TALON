@@ -23,6 +23,11 @@
     "module": "/js/tools/library.js"
   },
   {
+    "id": "linguistics",
+    "view": "/tools/linguistics.html",
+    "module": "/js/tools/linguistics.js"
+  },
+  {
     "id": "pipeline",
     "view": "/tools/pipeline.html",
     "module": "/js/tools/pipeline.js"

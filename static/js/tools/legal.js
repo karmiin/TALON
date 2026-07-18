@@ -1,6 +1,25 @@
 import { renderLegalTermResults } from "../shared/legal.js";
 
 export function init(ctx) {
+  const documentList = ctx.$("#legal-document-list");
+
+  function updateSelectionCount() {
+    const count = ctx.selectedIds("[data-legal-id]").length;
+    const label = ctx.$("#legal-selection-count");
+    if (label) label.textContent = `${count} ${count === 1 ? "selezionato" : "selezionati"}`;
+  }
+
+  documentList?.addEventListener("change", updateSelectionCount);
+  ctx.onDocumentsChanged(() => queueMicrotask(updateSelectionCount));
+  ctx.$("#legal-select-all")?.addEventListener("click", () => {
+    ctx.$$("[data-legal-id]", documentList).forEach((input) => { input.checked = true; });
+    updateSelectionCount();
+  });
+  ctx.$("#legal-select-none")?.addEventListener("click", () => {
+    ctx.$$("[data-legal-id]", documentList).forEach((input) => { input.checked = false; });
+    updateSelectionCount();
+  });
+
   async function runLegalTool() {
     const ids = ctx.selectedIds("[data-legal-id]");
     if (!ids.length) {

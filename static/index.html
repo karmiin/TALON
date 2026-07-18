@@ -6,42 +6,96 @@
   <meta name="description" content="TALON, Text Analysis and Latin Organization Network.">
   <title>TALON | Text Analysis and Latin Organization Network</title>
   <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/ui.css">
 </head>
 <body data-current-view="home">
   <a class="skip-link" href="#main">Vai al contenuto</a>
-  <header class="site-header">
-    <a class="brand" href="#" data-view="home" aria-label="TALON, home">
+  <aside class="app-sidebar app-rail" aria-label="Navigazione TALON">
+    <a class="sidebar-brand brand" href="#" data-view="home" aria-label="TALON, home">
       <span class="brand-mark">TA</span>
-      <span>
+      <span class="brand-copy">
         <strong>TALON</strong>
-        <small>Latin text analysis suite</small>
+        <small>Latin research workspace</small>
       </span>
     </a>
-    <nav class="top-nav" aria-label="Navigazione principale">
-      <button class="nav-button is-active" data-view="home">Dashboard</button>
-      <button class="nav-button" data-view="library">Testi</button>
-      <button class="nav-button" data-view="editor">Editor</button>
-      <button class="nav-button" data-view="pipeline">Pipeline</button>
-      <button class="nav-button" data-view="reports">Report</button>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">Workspace</span>
+        <button class="rail-button is-active" data-view="home" title="Dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <strong>Dashboard</strong>
+        </button>
+        <button class="rail-button" data-view="library" title="Archivio testi">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h6l2 2h10v10.5H3z"/><path d="M3 6.5V5h7l2 2h9v1.5"/></svg>
+          <strong>Archivio testi</strong>
+        </button>
+        <button class="rail-button" data-view="editor" title="Editor e annotazioni">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h4M8 17l1-4 7-7 2 2-7 7z"/></svg>
+          <strong>Editor</strong>
+        </button>
+        <button class="rail-button" data-view="pipeline" title="Pipeline report">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 6h8M7 8l4 8M17 8l-4 8"/></svg>
+          <strong>Pipeline report</strong>
+        </button>
+        <button class="rail-button" data-view="reports" title="Archivio report">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h4M8 17v-3M12 17v-6M16 17v-8"/></svg>
+          <strong>Report</strong>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">Analisi</span>
+        <button class="rail-button" data-view="linguistics" title="Lessico e grammatica">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v16H4zM13 4h7v16h-7z"/><path d="M6.5 8.5h2M6.5 12h2M15.5 8.5h2M15.5 12h2M15.5 15.5h2"/></svg>
+          <strong>Lessico e grammatica</strong>
+        </button>
+        <button class="rail-button" data-view="affinity" title="PCA">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v17h17"/><circle cx="8" cy="15" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="17" cy="12" r="1.5"/><circle cx="19" cy="6" r="1.5"/></svg>
+          <strong>PCA</strong>
+        </button>
+        <button class="rail-button" data-view="legal" title="Termini giuridici">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M6 6h12M7 6l-4 7h8zM17 6l-4 7h8zM8 21h8"/></svg>
+          <strong>Termini giuridici</strong>
+        </button>
+        <button class="rail-button" data-view="diff" title="Differenze tra testi">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v16H4zM14 4h6v16h-6zM7 8h1M7 12h1M16 9h1M16 14h1"/></svg>
+          <strong>Confronto testi</strong>
+        </button>
+        <button class="rail-button" data-view="voyant" title="Voyant Tools">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M9 20V4M14 20v-7M19 20V7"/></svg>
+          <strong>Voyant</strong>
+        </button>
+        <button class="rail-button" data-view="collatinus" title="Collatinus">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1 9 1.5v13c-3-2.5-6-3-9-1.5zM21 5.5c-3-1.5-6-1-9 1.5v13c3-2.5 6-3 9-1.5z"/></svg>
+          <strong>Collatinus</strong>
+        </button>
+      </div>
+
+      <div class="nav-section nav-section-system">
+        <span class="nav-section-label">Sistema</span>
+        <button class="rail-button" data-view="modules" title="Catalogo moduli">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><path d="M17 14v6M14 17h6"/></svg>
+          <strong>Moduli</strong>
+        </button>
+      </div>
     </nav>
+  </aside>
+
+  <header class="site-header">
+    <button class="header-menu-button" id="nav-toggle" type="button" aria-label="Riduci navigazione" aria-expanded="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="header-context">
+      <strong id="current-view-title">Dashboard</strong>
+    </div>
     <div class="header-actions">
-      <button class="primary-button" id="open-import" type="button">Importa</button>
+      <button class="primary-button" id="open-import" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+        Importa testo
+      </button>
     </div>
   </header>
-
-  <aside class="app-rail" aria-label="Strumenti TALON">
-    <button class="rail-button is-active" data-view="home" title="Dashboard"><span>HM</span><strong>Dashboard</strong></button>
-    <button class="rail-button" data-view="library" title="Testi"><span>TXT</span><strong>Testi</strong></button>
-    <button class="rail-button" data-view="editor" title="Editor"><span>ED</span><strong>Editor</strong></button>
-    <button class="rail-button" data-view="pipeline" title="Pipeline"><span>RUN</span><strong>Pipeline</strong></button>
-    <button class="rail-button" data-view="reports" title="Report"><span>PDF</span><strong>Report</strong></button>
-    <button class="rail-button" data-view="affinity" title="PCA"><span>PCA</span><strong>PCA</strong></button>
-    <button class="rail-button" data-view="legal" title="Giuridico"><span>LEX</span><strong>Giuridico</strong></button>
-    <button class="rail-button" data-view="diff" title="Diff"><span>DF</span><strong>Diff</strong></button>
-    <button class="rail-button" data-view="voyant" title="Voyant"><span>VY</span><strong>Voyant</strong></button>
-    <button class="rail-button" data-view="collatinus" title="Collatinus"><span>COL</span><strong>Collatinus</strong></button>
-    <button class="rail-button" data-view="modules" title="Moduli"><span>MOD</span><strong>Moduli</strong></button>
-  </aside>
 
   <main id="main">
     <div id="dynamic-tool-views"></div>

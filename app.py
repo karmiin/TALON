@@ -232,122 +232,6 @@ def init_storage() -> None:
             );
             """
         )
-        count = db.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
-        if count == 0:
-            seed_demo_documents(db)
-
-
-def seed_demo_documents(db: sqlite3.Connection) -> None:
-    demos = [
-        {
-            "title": "Charta venditionis A",
-            "author": "ignoto",
-            "date_label": "ca. 820 (demo)",
-            "period": "alto medioevo",
-            "place": "Tuscia (demo)",
-            "genre": "carta di vendita",
-            "witness": "Demo A",
-            "text": (
-                "In nomine domini. Ego Petrus filius quondam Iohannis vendo et trado "
-                "tibi Martino presbytero petiam unam de terra cum vinea et arboribus, "
-                "positam in loco qui dicitur Campum Longum. Habet fines: a primo latere "
-                "terra ecclesiae, a secundo via publica, a tertio rivus, a quarto terra "
-                "Leonis. Ipsa terra est per mensura tabulas duodecim. Pretium inter nos "
-                "constitutum est solidos argenti viginti, quos a te accepi et nihil mihi "
-                "remansit. Ab hodierna die habeas, teneas, possideas atque tuis heredibus "
-                "relinquas. Si ego aut meus heres contra hanc cartulam venire temptaverit, "
-                "componat duplum et haec venditio firma permaneat. Actum ante testes."
-            ),
-            "conllu": (
-                "# text = Ego Petrus vendo et trado tibi petiam unam de terra.\n"
-                "1\tEgo\tego\tPRON\t_\tCase=Nom|Number=Sing|Person=1\t3\tnsubj\t_\t_\n"
-                "2\tPetrus\tPetrus\tPROPN\t_\tCase=Nom|Number=Sing\t1\tappos\t_\t_\n"
-                "3\tvendo\tvendo\tVERB\t_\tMood=Ind|Number=Sing|Person=1|Tense=Pres|Voice=Act\t0\troot\t_\t_\n"
-                "4\tet\tet\tCCONJ\t_\t_\t5\tcc\t_\t_\n"
-                "5\ttrado\ttrado\tVERB\t_\tMood=Ind|Number=Sing|Person=1|Tense=Pres|Voice=Act\t3\tconj\t_\t_\n"
-                "6\ttibi\ttu\tPRON\t_\tCase=Dat|Number=Sing|Person=2\t5\tiobj\t_\t_\n"
-                "7\tpetiam\tpetia\tNOUN\t_\tCase=Acc|Gender=Fem|Number=Sing\t5\tobj\t_\t_\n"
-                "8\tunam\tunus\tNUM\t_\tCase=Acc|Gender=Fem|Number=Sing\t7\tnummod\t_\t_\n"
-                "9\tde\tde\tADP\t_\t_\t10\tcase\t_\t_\n"
-                "10\tterra\tterra\tNOUN\t_\tCase=Abl|Gender=Fem|Number=Sing\t7\tnmod\t_\tSpaceAfter=No\n"
-                "11\t.\t.\tPUNCT\t_\t_\t3\tpunct\t_\t_\n"
-            ),
-        },
-        {
-            "title": "Charta venditionis B",
-            "author": "ignoto",
-            "date_label": "ca. 825 (demo)",
-            "period": "alto medioevo",
-            "place": "Tuscia (demo)",
-            "genre": "carta di vendita",
-            "witness": "Demo B",
-            "text": (
-                "In nomine domini nostri. Ego Leo filius bone memorie Andreae per hanc "
-                "cartulam vendo vobis, Petro et Martino fratribus, casa et terra mea in "
-                "loco Campum Longum. Fines sunt: de uno latere via publica, de alio terra "
-                "sancti Petri, de tertio aqua currente, de quarto vinea Dominici. Accepi "
-                "a vobis pretium solidos viginti et duo, finitum pretium, unde me bene "
-                "contentum profiteor. A presenti die habeatis et possideatis vos et "
-                "heredes vestri, faciendi quod volueritis. Si quis contra hanc venditionem "
-                "agere presumpserit, duplum pretium restituat et cartula in sua firmitate "
-                "permaneat. Signum Leonis venditoris et testium."
-            ),
-            "conllu": "",
-        },
-        {
-            "title": "Charta donationis C",
-            "author": "ignoto",
-            "date_label": "ca. 870 (demo)",
-            "period": "alto medioevo",
-            "place": "Tuscia (demo)",
-            "genre": "donazione",
-            "witness": "Demo C",
-            "text": (
-                "Regnante domino nostro, pro remedio animae meae dono atque offero "
-                "ecclesiae beati Petri duas petias de terra et medietatem vineae. Prima "
-                "petia iacet prope viam publicam et terminatur a rivo; secunda est iuxta "
-                "silvam communem. Dono omnia cum ingressu, exitu, arboribus et pertinentiis, "
-                "ita ut sacerdotes ea teneant et fructum ad luminaria ecclesiae impendant. "
-                "Nullus ex heredibus meis hanc donationem minuere aut revocare presumat. "
-                "Qui contra fecerit, componat ecclesiae auri libras duas et quod repetit "
-                "non valeat vindicare. Haec pagina donationis firma sit omni tempore, "
-                "manu mea roborata et testibus tradita."
-            ),
-            "conllu": "",
-        },
-    ]
-    for demo in demos:
-        db.execute(
-            """
-            INSERT INTO documents (
-                title, author, date_label, period, place, genre, witness,
-                source_name, source_hash, source_type, diplomatic_text,
-                normalized_text, notes, structure_json, conllu, conllu_source,
-                is_demo, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-            """,
-            (
-                demo["title"],
-                demo["author"],
-                demo["date_label"],
-                demo["period"],
-                demo["place"],
-                demo["genre"],
-                demo["witness"],
-                "dataset dimostrativo sintetico",
-                "",
-                "demo",
-                demo["text"],
-                normalize_whitespace(demo["text"]),
-                "Testo sintetico per dimostrare l'interfaccia; non e una fonte storica.",
-                "[]",
-                demo["conllu"],
-                "annotazione manuale dimostrativa" if demo["conllu"] else "",
-                utc_now(),
-            ),
-        )
-
-
 def normalize_whitespace(text: str) -> str:
     paragraphs = []
     for paragraph in re.split(r"\n\s*\n", text.replace("\r\n", "\n")):
@@ -707,6 +591,46 @@ def delete_annotation(annotation_id: int) -> None:
         cursor = db.execute("DELETE FROM annotations WHERE id = ?", (annotation_id,))
         if cursor.rowcount == 0:
             raise ValueError("Annotazione non trovata.")
+
+
+def delete_document(document_id: int) -> dict[str, Any]:
+    row = fetch_document(document_id)
+    if not row:
+        raise ValueError("Documento non trovato.")
+
+    removed_runs = 0
+    with db_session() as db:
+        runs = db.execute("SELECT id, document_ids FROM analysis_runs").fetchall()
+        run_ids = []
+        for run in runs:
+            try:
+                ids = [int(value) for value in json.loads(run["document_ids"] or "[]")]
+            except (TypeError, ValueError, json.JSONDecodeError):
+                ids = []
+            if document_id in ids:
+                run_ids.append(int(run["id"]))
+        if run_ids:
+            placeholders = ",".join("?" for _ in run_ids)
+            db.execute(f"DELETE FROM analysis_runs WHERE id IN ({placeholders})", run_ids)
+            removed_runs = len(run_ids)
+
+        cursor = db.execute("DELETE FROM documents WHERE id = ?", (document_id,))
+        if cursor.rowcount == 0:
+            raise ValueError("Documento non trovato.")
+        shared_source = False
+        if row["source_hash"]:
+            shared_source = bool(
+                db.execute(
+                    "SELECT 1 FROM documents WHERE source_hash = ? LIMIT 1",
+                    (row["source_hash"],),
+                ).fetchone()
+            )
+
+    if row["source_hash"] and not shared_source:
+        stored_path = UPLOAD_DIR / safe_source_name(row["source_name"], row["source_hash"])
+        stored_path.unlink(missing_ok=True)
+
+    return {"status": "ok", "removed_runs": removed_runs}
 
 
 def fetch_documents(ids: list[int] | None = None) -> list[sqlite3.Row]:
@@ -2399,6 +2323,10 @@ class TalonHandler(BaseHTTPRequestHandler):
             if match:
                 delete_annotation(int(match.group(1)))
                 self.send_json({"status": "ok"})
+                return
+            match = re.fullmatch(r"/api/documents/(\d+)", path)
+            if match:
+                self.send_json(delete_document(int(match.group(1))))
                 return
             self.send_error_json("Endpoint non trovato.", HTTPStatus.NOT_FOUND)
         except ValueError as error:

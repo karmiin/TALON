@@ -9,7 +9,7 @@ function renderReportCenter() {
   const { $, state, escapeHtml } = ctxRef;
   const container = $("#report-center-panel");
   if (!container) return;
-  const runs = state.runs || [];
+  const runs = (state.runs || []).filter((run) => run.kind === "pipeline" && run.report_url);
   if (!runs.length) {
     container.innerHTML = `
       <div class="empty-state panel">
@@ -24,9 +24,9 @@ function renderReportCenter() {
     <section class="panel result-panel">
       <div class="result-heading">
         <div>
-          <p class="eyebrow">Storico</p>
-          <h2>${runs.length} run registrati</h2>
-          <p>Solo i run pipeline producono report HTML e PDF.</p>
+          <p class="eyebrow">Report salvati</p>
+          <h2>${runs.length} report</h2>
+          <p>Ogni voce conserva documenti, moduli e parametri della pipeline.</p>
         </div>
       </div>
       <div class="run-list">
@@ -36,13 +36,13 @@ function renderReportCenter() {
           return `
             <article class="run-row">
               <div>
-                <strong>Run #${escapeHtml(run.id)} · ${escapeHtml(run.kind)}</strong>
-                <small>${escapeHtml(run.created_at)} · ${escapeHtml(documents || "nessun documento")}</small>
-                <span>${escapeHtml(modules || run.parser || "parametri non dichiarati")}</span>
+                <strong>Report #${escapeHtml(run.id)}</strong>
+                <small>${escapeHtml(run.created_at)} · ${escapeHtml(documents || "documenti non disponibili")}</small>
+                <span>${escapeHtml(modules || "analisi non dichiarate")}</span>
               </div>
               <div class="run-actions">
-                ${run.report_url ? `<a class="secondary-button" href="${escapeHtml(run.report_url)}" target="_blank" rel="noreferrer">HTML</a>` : ""}
-                ${run.report_pdf_url ? `<a class="primary-button" href="${escapeHtml(run.report_pdf_url)}">PDF</a>` : ""}
+                <a class="secondary-button" href="${escapeHtml(run.report_url)}" target="_blank" rel="noreferrer">Apri</a>
+                ${run.report_pdf_url ? `<a class="primary-button" href="${escapeHtml(run.report_pdf_url)}">Scarica PDF</a>` : ""}
               </div>
             </article>
           `;

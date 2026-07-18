@@ -1,0 +1,73 @@
+{
+  "families": [
+    {
+      "id": "dominium_proprietas",
+      "label": "Dominium / proprietas",
+      "description": "Titolarita, proprieta e dominio su beni o fondi.",
+      "lemmas": ["dominium", "proprietas", "possessio", "possideo"],
+      "aliases": [
+        "dominium", "dominio", "dominii", "proprietas", "proprietatem",
+        "proprietatis", "proprietate", "possessio", "possessionem",
+        "possessionis", "possidere", "possideo", "possideat", "possideatis"
+      ]
+    },
+    {
+      "id": "terra_fundus",
+      "label": "Terra / fundus",
+      "description": "Beni fondiari, campi, appezzamenti e pertinenze.",
+      "lemmas": ["terra", "fundus", "ager", "petia", "vinea", "pertinentia"],
+      "aliases": [
+        "terra", "terram", "terrae", "terris", "fundus", "fundum", "fundi",
+        "ager", "agrum", "agri", "petia", "petiam", "petias", "vinea",
+        "vineam", "vineae", "pertinentia", "pertinentiis"
+      ]
+    },
+    {
+      "id": "transfer",
+      "label": "Venditio / traditio / donatio",
+      "description": "Atti di trasferimento, vendita, consegna e donazione.",
+      "lemmas": [
+        "vendo", "venditio", "venditor", "trado", "traditio", "dono",
+        "donatio", "offero", "concedo", "concessio"
+      ],
+      "aliases": [
+        "vendo", "venditio", "venditionem", "venditionis", "venditor", "trado",
+        "traditio", "tradita", "dono", "donatio", "donationem", "donationis",
+        "offero", "concedo", "concessio"
+      ]
+    },
+    {
+      "id": "boundaries",
+      "label": "Fines / termini",
+      "description": "Confini, lati, limiti e descrizioni topografiche.",
+      "lemmas": ["finis", "terminus", "termino", "latus", "iuxta", "prope", "rivus", "via", "publicus"],
+      "aliases": [
+        "fines", "finis", "fine", "terminus", "terminum", "terminatur",
+        "latere", "lateribus", "iuxta", "prope", "rivo", "rivus", "via", "publica"
+      ]
+    },
+    {
+      "id": "price_obligation",
+      "label": "Pretium / obligatio",
+      "description": "Prezzo, pagamento, pena e obbligazione.",
+      "lemmas": [
+        "pretium", "solidus", "argentum", "accipio", "duplus", "compono",
+        "restituo", "obligatio", "pactum", "firmus", "firmitas"
+      ],
+      "aliases": [
+        "pretium", "pretio", "solidos", "solidis", "argenti", "accepi",
+        "duplum", "componat", "restituat", "obligatio", "pactum", "firma", "firmitate"
+      ]
+    },
+    {
+      "id": "inheritance",
+      "label": "Heres / successio",
+      "description": "Eredi, successione e trasmissione del diritto.",
+      "lemmas": ["heres", "successio", "successor", "relinquo", "revoco", "vindico"],
+      "aliases": [
+        "heres", "heredis", "heredibus", "heredes", "successio", "successor",
+        "relinquo", "relinquas", "revocare", "vindicare"
+      ]
+    }
+  ]
+}

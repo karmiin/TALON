@@ -27,10 +27,10 @@ function selectedFeatureCount(ctx, mode) {
 function modeCopy(mode) {
   if (mode === "function") {
     return {
-      eyebrow: "PCA function words",
+      eyebrow: "PCA su parole grammaticali",
       title: "Parole grammaticali",
       description: "Profilo non tematico: congiunzioni, preposizioni, pronomi e particelle.",
-      empty: "Calcolo della PCA sulle function words...",
+      empty: "Calcolo della PCA sulle parole grammaticali...",
     };
   }
   return {
@@ -157,6 +157,12 @@ function renderPcaToolResults(ctx, payload, mode) {
   `;
 }
 
+function syncPcaControls(ctx) {
+  const functionMode = selectedMode(ctx) === "function";
+  const parser = ctx.$("#affinity-parser-select");
+  if (parser) parser.disabled = functionMode;
+}
+
 export function init(ctx) {
   async function runPcaTool() {
     const mode = selectedMode(ctx);
@@ -205,4 +211,6 @@ export function init(ctx) {
   }
 
   ctx.$("#run-affinity-tool")?.addEventListener("click", runPcaTool);
+  ctx.$$('input[name="pca-mode"]').forEach((input) => input.addEventListener("change", () => syncPcaControls(ctx)));
+  syncPcaControls(ctx);
 }

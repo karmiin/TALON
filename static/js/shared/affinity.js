@@ -54,9 +54,9 @@ export function renderPcaPlot(ctx, payload, options = {}) {
     const y = pcaScale(point.y, yBounds, height - margin.bottom, margin.top);
     return `
       <g class="pca-point" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">
-        <circle r="5.5"></circle>
-        <text class="pca-point-index" text-anchor="middle" y="4">${index + 1}</text>
-        <title>${ctx.escapeHtml(point.title)} | PC1 ${ctx.formatNumber(point.x, 3)} | PC2 ${ctx.formatNumber(point.y, 3)} | PC3 ${ctx.formatNumber(point.z || 0, 3)}</title>
+        <circle r="8"></circle>
+        <text class="pca-point-index" text-anchor="middle" y="3.5">${index + 1}</text>
+        <title>${ctx.escapeHtml(point.title)} | PC1 ${ctx.formatNumber(point.x, 3)} | PC2 ${ctx.formatNumber(point.y, 3)}</title>
       </g>
     `;
   }).join("");
@@ -82,7 +82,7 @@ export function renderPcaDocumentKey(ctx, payload) {
         <article>
           <b>${index + 1}</b>
           <span>${ctx.escapeHtml(point.title)}</span>
-          <small>PC1 ${ctx.formatNumber(point.x, 3)} · PC2 ${ctx.formatNumber(point.y, 3)}${Number.isFinite(Number(point.z)) ? ` · PC3 ${ctx.formatNumber(point.z, 3)}` : ""}</small>
+          <small>PC1 ${ctx.formatNumber(point.x, 3)} · PC2 ${ctx.formatNumber(point.y, 3)}</small>
         </article>
       `).join("")}
     </div>

@@ -16,10 +16,10 @@
     },
     {
       "id": "tool_pipeline",
-      "label": "Pipeline di analisi",
+      "label": "Pipeline report",
       "category": "tool",
       "status": "active",
-      "description": "Run configurabili con parser, moduli e report.",
+      "description": "Configura le analisi da eseguire e genera un report verificabile.",
       "outputs": ["run pipeline", "report stampabile"],
       "ui": {
         "view": "pipeline",
@@ -42,10 +42,10 @@
     },
     {
       "id": "tool_reports",
-      "label": "Report Center",
+      "label": "Archivio report",
       "category": "tool",
       "status": "active",
-      "description": "Archivio dei run con apertura HTML e download PDF.",
+      "description": "Consulta i run salvati e apri i report in HTML o PDF.",
       "outputs": ["storico run", "report HTML/PDF"],
       "ui": {
         "view": "reports",
@@ -54,11 +54,24 @@
       "order": 25
     },
     {
+      "id": "tool_linguistics",
+      "label": "Lessico e grammatica",
+      "category": "tool",
+      "status": "active",
+      "description": "Esamina frequenze, contesti, lemmi, morfologia e struttura delle frasi di un testo.",
+      "outputs": ["profilo lessicale", "KWIC e collocazioni", "analisi morfosintattica per frase"],
+      "ui": {
+        "view": "linguistics",
+        "icon": "LG"
+      },
+      "order": 27
+    },
+    {
       "id": "tool_affinity",
       "label": "PCA",
       "category": "tool",
       "status": "active",
-      "description": "Mappa PCA 2D con switch tra lessico/lemmi e function words.",
+      "description": "Confronta i testi in 2D usando lessico, lemmi o parole grammaticali.",
       "outputs": ["PCA 2D", "assi interpretati", "distanze"],
       "ui": {
         "view": "affinity",
@@ -71,7 +84,7 @@
       "label": "Termini giuridici",
       "category": "tool",
       "status": "active",
-      "description": "Conteggi e highlight di lessico giuridico.",
+      "description": "Individua e mostra nel testo le famiglie terminologiche giuridiche.",
       "outputs": ["totali", "distribuzione per testo", "testi evidenziati"],
       "ui": {
         "view": "legal",
@@ -94,10 +107,10 @@
     },
     {
       "id": "tool_voyant",
-      "label": "Voyant workspace",
+      "label": "Voyant Tools",
       "category": "tool",
       "status": "active",
-      "description": "Apertura integrata dei tool Voyant.",
+      "description": "Esplora i testi nel workspace Voyant integrato.",
       "outputs": ["iframe Voyant", "link esterno"],
       "references": [
         {

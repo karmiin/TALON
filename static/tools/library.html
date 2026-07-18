@@ -5,16 +5,7 @@
       <h1>Documenti</h1>
       <p class="workspace-copy">Gestione delle trascrizioni e dei metadati.</p>
     </div>
-    <div class="workspace-actions">
-      <span class="status-dot"></span>
-      <div>
-        <strong>Storage locale</strong>
-        <p>SQLite e file del progetto.</p>
-      </div>
-    </div>
   </div>
-
-  <div class="stat-grid" id="corpus-stats" aria-label="Statistiche della raccolta di testi"></div>
 
   <section class="panel corpus-panel">
     <div class="panel-heading corpus-toolbar">
@@ -29,4 +20,20 @@
     </div>
     <div id="document-list" class="document-list" aria-live="polite"></div>
   </section>
+
+  <dialog id="delete-document-dialog" class="confirm-dialog">
+    <div class="dialog-heading">
+      <div>
+        <p class="eyebrow">Rimozione documento</p>
+        <h2>Eliminare il testo?</h2>
+      </div>
+      <button class="icon-button" type="button" data-cancel-document-delete aria-label="Chiudi">x</button>
+    </div>
+    <p id="delete-document-message"></p>
+    <p class="muted">Verranno eliminate anche le annotazioni e le analisi salvate che dipendono da questo testo. L'operazione non puo essere annullata.</p>
+    <div class="dialog-actions">
+      <button class="secondary-button" type="button" data-cancel-document-delete>Annulla</button>
+      <button class="danger-button" id="confirm-document-delete" type="button">Elimina definitivamente</button>
+    </div>
+  </dialog>
 </section>

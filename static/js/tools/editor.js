@@ -1,4 +1,7 @@
+import { createDocumentPicker } from "../shared/document-picker.js";
+
 let ctxRef;
+let editorDocumentPicker;
 
 function editorPayload() {
   const { state } = ctxRef;
@@ -79,8 +82,7 @@ function hasEditorChanges() {
 
 async function loadEditorDocument(documentId = null) {
   const { $, api, state, toast } = ctxRef;
-  const select = $("#editor-document-select");
-  const id = Number(documentId || select?.value || 0);
+  const id = Number(documentId || editorDocumentPicker?.value || 0);
   if (!id) {
     toast("Seleziona un documento.");
     return;
@@ -89,7 +91,7 @@ async function loadEditorDocument(documentId = null) {
   if (state.editor.document?.id !== id && hasEditorChanges()) {
     const keepEditing = !window.confirm("Ci sono modifiche non salvate. Cambiare documento senza salvare?");
     if (keepEditing) {
-      select.value = String(state.editor.document.id);
+      editorDocumentPicker?.setValue(state.editor.document.id);
       return;
     }
   }
@@ -103,7 +105,7 @@ async function loadEditorDocument(documentId = null) {
     state.editor.originalText = documentPayload.document.diplomatic_text || "";
     state.editor.annotations = annotationPayload.annotations;
     state.editor.selection = null;
-    if (select) select.value = String(id);
+    editorDocumentPicker?.setValue(id);
     fillEditorFields(state.editor.document);
     renderEditorAnnotations();
     $("#editor-selection-preview").textContent = "Seleziona un passo nel testo.";
@@ -135,8 +137,8 @@ async function saveEditorDocument({ silent = false } = {}) {
     state.editor.originalText = result.document.diplomatic_text || "";
     fillEditorFields(result.document);
     await loadDocuments();
-    renderEditorDocumentSelect();
-    $("#editor-document-select").value = String(result.document.id);
+    renderEditorDocumentPicker();
+    editorDocumentPicker?.setValue(result.document.id);
     renderEditorDocumentPage(result.document.diplomatic_text || "");
     if (!silent) {
       toast(result.text_changed ? "Testo salvato. Analisi grammaticale da rigenerare." : "Metadati salvati.");
@@ -276,29 +278,39 @@ async function deleteEditorAnnotation(annotationId = ctxRef.state.editor.targetA
   }
 }
 
-function renderEditorDocumentSelect() {
-  const { $, state, escapeHtml } = ctxRef;
-  const select = $("#editor-document-select");
-  if (!select) return;
-  const current = select.value || state.editor.document?.id || "";
-  select.innerHTML = state.documents.length ? state.documents.map((document) => `
-    <option value="${document.id}">${escapeHtml(document.title)}</option>
-  `).join("") : `<option value="">Nessun documento disponibile</option>`;
-  if (current && state.documents.some((document) => String(document.id) === String(current))) {
-    select.value = String(current);
+function renderEditorDocumentPicker() {
+  const { $, state } = ctxRef;
+  if (!editorDocumentPicker) return;
+  const activeStillExists = state.editor.document
+    && state.documents.some((document) => document.id === state.editor.document.id);
+  if (state.editor.document && !activeStillExists) {
+    state.editor.document = null;
+    state.editor.originalText = "";
+    state.editor.annotations = [];
+    state.editor.selection = null;
+    $("#editor-text").innerHTML = "";
+    $("#editor-current-title").textContent = "Nessun documento caricato";
+    $("#editor-status").textContent = "Scegli un testo.";
+    $("#editor-start")?.classList.remove("is-hidden");
+    renderEditorAnnotations();
   }
+  const current = state.editor.document?.id || editorDocumentPicker.value || "";
+  const selected = editorDocumentPicker.setDocuments(state.documents, current);
   if (!state.editor.document && state.documents.length) {
-    loadEditorDocument(select.value || state.documents[0].id);
+    loadEditorDocument(selected);
   }
 }
 
 export function init(ctx) {
   ctxRef = ctx;
   const { $, onDocumentsChanged } = ctx;
-  onDocumentsChanged(renderEditorDocumentSelect);
-  renderEditorDocumentSelect();
+  editorDocumentPicker = createDocumentPicker($("#editor-document-picker"), {
+    label: "Documento in modifica",
+    onChange: (documentId) => loadEditorDocument(documentId),
+  });
+  onDocumentsChanged(renderEditorDocumentPicker);
+  renderEditorDocumentPicker();
 
-  $("#editor-document-select")?.addEventListener("change", () => loadEditorDocument());
   $("#editor-save")?.addEventListener("click", () => saveEditorDocument());
   $("#editor-reset")?.addEventListener("click", resetEditorDocument);
   $("#editor-text")?.addEventListener("select", captureEditorSelection);

@@ -1,0 +1,22 @@
+<section class="app-view" id="view-linguistics">
+  <div class="workspace-hero">
+    <div>
+      <p class="eyebrow">Analisi del singolo testo</p>
+      <h1>Lessico e grammatica</h1>
+      <p class="workspace-copy">Controlla le parole ricorrenti e, quando disponibile, la struttura grammaticale di ogni frase.</p>
+    </div>
+  </div>
+
+  <section class="panel linguistic-workbench">
+    <div class="linguistic-toolbar">
+      <div class="linguistic-document-field" id="linguistic-document-picker"></div>
+      <div class="view-switch" role="tablist" aria-label="Tipo di analisi">
+        <button class="is-active" type="button" data-linguistic-tab="lexicon" role="tab" aria-selected="true">Lessico</button>
+        <button type="button" data-linguistic-tab="syntax" role="tab" aria-selected="false">Grammatica</button>
+      </div>
+    </div>
+    <div id="linguistic-content" class="linguistic-content">
+      <div class="empty-state"><h2>Seleziona un testo</h2><p>L'analisi viene caricata automaticamente.</p></div>
+    </div>
+  </section>
+</section>

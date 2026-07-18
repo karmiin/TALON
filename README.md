@@ -6,10 +6,10 @@ Il progetto non e pensato come un sistema che decide automaticamente l'interpret
 
 ## Funzioni principali
 
-- Archivio testi: import di file `.docx`, `.txt`, `.xml`, `.conllu` e PDF testuali.
+- Archivio testi: import, lettura, metadati e rimozione controllata di file `.docx`, `.txt`, `.xml`, `.conllu` e PDF testuali.
 - Editor: modifica del testo e annotazioni direttamente sulla trascrizione.
 - Pipeline report: selezione dei testi, scelta del parser, scelta dei moduli e generazione di report HTML/PDF.
-- Lessico: conteggi, forme ricorrenti, varieta lessicale, KWIC e collocazioni.
+- Lessico e grammatica: conteggi, varieta lessicale, KWIC, collocazioni e analisi morfosintattica delle singole frasi.
 - Termini giuridici: famiglie lessicali configurabili e testo completo con occorrenze evidenziate.
 - Differenze tra due testi: confronto visuale con sostituzioni, omissioni e aggiunte.
 - PCA: mappa PC1/PC2 dei testi, con switch tra lessico/lemmi e function words.
@@ -120,6 +120,18 @@ data/uploads/
 
 Il database contiene documenti importati, annotazioni e storico dei run. Gli upload originali vengono conservati con hash SHA-256. In un repository pubblico questi file normalmente non vanno versionati, salvo dataset dimostrativi esplicitamente scelti.
 
+TALON non inserisce testi di esempio: un database nuovo parte vuoto e viene popolato solo tramite importazione.
+
+## Vocabolario giuridico
+
+Le famiglie predefinite del modulo `Termini giuridici` sono nel file:
+
+```txt
+talon/legal_terms.json
+```
+
+Ogni famiglia dichiara `id`, `label`, `description`, `lemmas` e `aliases`. Il file viene riletto a ogni analisi, quindi puo essere ampliato o corretto senza modificare il codice Python. `lemmas` viene usato con LatinCy; `aliases` contiene le forme da cercare quando si lavora senza lemmatizzazione.
+
 ## Test
 
 ```powershell
@@ -142,9 +154,11 @@ Voyant viene aperto come workspace integrato quando possibile. L'export zip rest
 
 - `app.py`: server HTTP locale, API, storage, analisi principali e report.
 - `talon/`: moduli Python riusabili per catalogo, parser, import PDF, report, Voyant, Collatinus.
+- `talon/legal_terms.json`: vocabolario modificabile delle famiglie terminologiche giuridiche.
 - `talon/modules/builtin.json`: catalogo dei tool, analisi, parser, integrazioni e stili report.
 - `static/index.html`: shell principale della webapp.
 - `static/app.css`: stile globale.
+- `static/ui.css`: sistema visivo dell'interfaccia desktop.
 - `static/app.js`: orchestratore frontend.
 - `static/tools/manifest.json`: manifest delle viste frontend caricate dinamicamente.
 - `static/tools/*.html`: viste dei tool.

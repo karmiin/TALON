@@ -1,201 +1,52 @@
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from collections.abc import Iterable
 from collections import Counter, defaultdict
+from pathlib import Path
 from typing import Any
 
 
 WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
+LEGAL_TERMS_PATH = Path(__file__).with_name("legal_terms.json")
 
 
-LEGAL_TERM_FAMILIES = [
-    {
-        "id": "dominium_proprietas",
-        "label": "Dominium / proprietas",
-        "description": "titolarita, proprieta e dominio su beni o fondi",
-        "lemmas": [
-            "dominium",
-            "proprietas",
-            "possessio",
-            "possideo",
-        ],
-        "aliases": [
-            "dominium",
-            "dominio",
-            "dominii",
-            "proprietas",
-            "proprietatem",
-            "proprietatis",
-            "proprietate",
-            "possessio",
-            "possessionem",
-            "possessionis",
-            "possidere",
-            "possideo",
-            "possideat",
-            "possideatis",
-        ],
-    },
-    {
-        "id": "terra_fundus",
-        "label": "Terra / fundus",
-        "description": "beni fondiari, campi, appezzamenti e pertinenze",
-        "lemmas": [
-            "terra",
-            "fundus",
-            "ager",
-            "petia",
-            "vinea",
-            "pertinentia",
-        ],
-        "aliases": [
-            "terra",
-            "terram",
-            "terrae",
-            "terris",
-            "fundus",
-            "fundum",
-            "fundi",
-            "ager",
-            "agrum",
-            "agri",
-            "petia",
-            "petiam",
-            "petias",
-            "vinea",
-            "vineam",
-            "vineae",
-            "pertinentia",
-            "pertinentiis",
-        ],
-    },
-    {
-        "id": "transfer",
-        "label": "Venditio / traditio / donatio",
-        "description": "atti di trasferimento, vendita, consegna e donazione",
-        "lemmas": [
-            "vendo",
-            "venditio",
-            "venditor",
-            "trado",
-            "traditio",
-            "dono",
-            "donatio",
-            "offero",
-            "concedo",
-            "concessio",
-        ],
-        "aliases": [
-            "vendo",
-            "venditio",
-            "venditionem",
-            "venditionis",
-            "venditor",
-            "trado",
-            "traditio",
-            "tradita",
-            "dono",
-            "donatio",
-            "donationem",
-            "donationis",
-            "offero",
-            "concedo",
-            "concessio",
-        ],
-    },
-    {
-        "id": "boundaries",
-        "label": "Fines / termini",
-        "description": "confini, lati, limiti e descrizioni topografiche",
-        "lemmas": [
-            "finis",
-            "terminus",
-            "termino",
-            "latus",
-            "iuxta",
-            "prope",
-            "rivus",
-            "via",
-            "publicus",
-        ],
-        "aliases": [
-            "fines",
-            "finis",
-            "fine",
-            "terminus",
-            "terminum",
-            "terminatur",
-            "latere",
-            "lateribus",
-            "iuxta",
-            "prope",
-            "rivo",
-            "rivus",
-            "via",
-            "publica",
-        ],
-    },
-    {
-        "id": "price_obligation",
-        "label": "Pretium / obligatio",
-        "description": "prezzo, pagamento, pena e obbligazione",
-        "lemmas": [
-            "pretium",
-            "solidus",
-            "argentum",
-            "accipio",
-            "duplus",
-            "compono",
-            "restituo",
-            "obligatio",
-            "pactum",
-            "firmus",
-            "firmitas",
-        ],
-        "aliases": [
-            "pretium",
-            "pretio",
-            "solidos",
-            "solidis",
-            "argenti",
-            "accepi",
-            "duplum",
-            "componat",
-            "restituat",
-            "obligatio",
-            "pactum",
-            "firma",
-            "firmitate",
-        ],
-    },
-    {
-        "id": "inheritance",
-        "label": "Heres / successio",
-        "description": "eredi, successione e trasmissione del diritto",
-        "lemmas": [
-            "heres",
-            "successio",
-            "successor",
-            "relinquo",
-            "revoco",
-            "vindico",
-        ],
-        "aliases": [
-            "heres",
-            "heredis",
-            "heredibus",
-            "heredes",
-            "successio",
-            "successor",
-            "relinquo",
-            "relinquas",
-            "revocare",
-            "vindicare",
-        ],
-    },
-]
+def load_legal_term_families(path: Path = LEGAL_TERMS_PATH) -> list[dict[str, Any]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Impossibile leggere il vocabolario giuridico: {error}") from error
+
+    families = payload.get("families") if isinstance(payload, dict) else None
+    if not isinstance(families, list) or not families:
+        raise ValueError("Il vocabolario giuridico deve contenere una lista 'families'.")
+
+    validated: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, family in enumerate(families, start=1):
+        if not isinstance(family, dict):
+            raise ValueError(f"Famiglia giuridica {index}: formato non valido.")
+        family_id = str(family.get("id", "")).strip()
+        label = str(family.get("label", "")).strip()
+        lemmas = family.get("lemmas", [])
+        aliases = family.get("aliases", [])
+        if not family_id or not label or not isinstance(lemmas, list) or not isinstance(aliases, list):
+            raise ValueError(f"Famiglia giuridica {index}: id, label, lemmas e aliases sono obbligatori.")
+        if family_id in seen_ids:
+            raise ValueError(f"ID famiglia giuridica duplicato: {family_id}.")
+        seen_ids.add(family_id)
+        validated.append(
+            {
+                "id": family_id,
+                "label": label,
+                "description": str(family.get("description", "")).strip(),
+                "lemmas": [str(item).strip() for item in lemmas if str(item).strip()],
+                "aliases": [str(item).strip() for item in aliases if str(item).strip()],
+            }
+        )
+    return validated
 
 
 def apply_profile(text: str, profile: dict[str, Any] | None = None) -> str:
@@ -305,14 +156,15 @@ def parse_requested_terms(value: Any) -> list[str]:
 
 
 def families_for_terms(raw_terms: Any, profile: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    families = load_legal_term_families()
     requested = parse_requested_terms(raw_terms)
     if not requested:
-        return LEGAL_TERM_FAMILIES
+        return families
 
     selected = []
     seen = set()
     normalized_requested = {apply_profile(term, profile) for term in requested}
-    for family in LEGAL_TERM_FAMILIES:
+    for family in families:
         aliases = {apply_profile(alias, profile) for alias in family["aliases"]}
         keys = {apply_profile(family["id"], profile), apply_profile(family["label"], profile)}
         if normalized_requested & (aliases | keys):
@@ -321,7 +173,7 @@ def families_for_terms(raw_terms: Any, profile: dict[str, Any] | None = None) ->
 
     known_aliases = {
         apply_profile(alias, profile)
-        for family in LEGAL_TERM_FAMILIES
+        for family in families
         for alias in family["aliases"]
     }
     for term in requested:
